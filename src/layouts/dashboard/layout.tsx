@@ -9,7 +9,7 @@ import { useTheme } from '@mui/material/styles';
 import { Main } from './main';
 import { layoutClasses } from '../classes';
 import { NavMobile, NavDesktop } from './nav';
-import { navData } from '../config-nav-dashboard';
+import { navData, bottomNavData } from '../config-nav-dashboard';
 import { MenuButton } from '../components/menu-button';
 import { LayoutSection } from '../core/layout-section';
 import { HeaderSection } from '../core/header-section';
@@ -60,7 +60,12 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
                     [theme.breakpoints.up(layoutQuery)]: { display: 'none' },
                   }}
                 />
-                <NavMobile data={navData} open={navOpen} onClose={() => setNavOpen(false)} />
+                <NavMobile 
+                  data={navData} 
+                  open={navOpen} 
+                  onClose={() => setNavOpen(false)} 
+                  slots={{ bottomArea: bottomNavData }}
+                />
               </>
             ),
             rightArea: (
@@ -74,7 +79,13 @@ export function DashboardLayout({ sx, children, header }: DashboardLayoutProps) 
       /** **************************************
        * Sidebar
        *************************************** */
-      sidebarSection={<NavDesktop data={navData} layoutQuery={layoutQuery} />}
+      sidebarSection={
+        <NavDesktop 
+          data={navData} 
+          layoutQuery={layoutQuery} 
+          slots={{ bottomArea: bottomNavData }}
+        />
+      }
       /** **************************************
        * Footer
        *************************************** */

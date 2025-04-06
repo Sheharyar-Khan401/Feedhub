@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
 import { layoutClasses } from 'src/layouts/classes';
+import { Container } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -16,20 +17,15 @@ export function Main({ sx, children, layoutQuery, ...other }: MainProps) {
   const theme = useTheme();
 
   const renderContent = (
-    <Box
+    <Container
       sx={{
-        py: 5,
-        px: 3,
-        width: 1,
-        borderRadius: 2,
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: 'background.default',
-        maxWidth: 'var(--layout-auth-content-width)',
+        alignItems:"center",
       }}
     >
       {children}
-    </Box>
+    </Container>
   );
 
   return (
@@ -41,6 +37,7 @@ export function Main({ sx, children, layoutQuery, ...other }: MainProps) {
         flex: '1 1 auto',
         alignItems: 'center',
         flexDirection: 'column',
+        height: "100vh",
         p: theme.spacing(3, 2, 10, 2),
         [theme.breakpoints.up(layoutQuery)]: {
           justifyContent: 'center',
