@@ -78,7 +78,12 @@ export function LoginForm() {
           />
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Link variant="subtitle2" underline="hover">
+            <Link 
+              variant="subtitle2" 
+              underline="hover" 
+              onClick={() => navigate('/reset-password')}
+              sx={{ cursor: 'pointer' }}
+            >
               Forgot password?
             </Link>
           </Box>

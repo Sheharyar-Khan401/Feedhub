@@ -46,7 +46,7 @@ export function AuthForm({ title, children, formtype }: Props) {
                 }}
               >
                 <Iconify
-                  icon={formtype === 'login' ? 'mdi:login' : 'mdi:account-plus'}
+                  icon={formtype === 'login' ? 'mdi:login' : formtype === 'register' ? 'mdi:account-plus' : 'mdi:lock-reset'}
                   sx={{
                     width: 32,
                     height: 32,
@@ -71,7 +71,7 @@ export function AuthForm({ title, children, formtype }: Props) {
                   fontSize: { xs: '0.875rem', md: '1rem' }
                 }}
               >
-                {formtype === 'login' ? 'Sign in to your account' : 'Create your account to get started'}
+                {formtype === 'login' ? 'Sign in to your account' : formtype === 'register' ? 'Create your account to get started' : 'Reset your password'}
               </Typography>
             </Box>
             {children}

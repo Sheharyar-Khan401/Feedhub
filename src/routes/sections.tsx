@@ -16,6 +16,7 @@ import SurveyVote from 'src/pages/survey-vote';
 import { AuthForm } from 'src/components/auth/auth-form';
 import { RegisterForm } from 'src/components/auth/register-form';
 import { LoginForm } from 'src/components/auth/login-form';
+import { ResetPasswordForm } from 'src/components/auth/reset-password-form';
 
 export const HomePage = lazy(() => import('src/pages/home'));
 export const Feedbacks = lazy(() => import('src/pages/feedbacks'));
@@ -69,6 +70,10 @@ export function Router() {
         {
           path: 'login',
           element: <AuthForm formtype="login" title="Welcome!" children={<LoginForm />} />,
+        },
+        {
+          path: 'reset-password',
+          element: <AuthForm formtype="reset" title="Reset Password" children={<ResetPasswordForm />} />,
         },
       ],
     },
