@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { CSVLink } from 'react-csv';
 import type { Feedback } from '../models/firebaseModel';
 import { deleteFeedbackFromDb, fetchFeedbacksFromDb } from '../models/firebaseModel';
+import { useAuth } from '../contexts/auth-context';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -49,21 +50,28 @@ export default function Feedbacks() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDetails, setSelectedDetails] = useState<Feedback | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // useEffect to get feedback from Firebase
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const feedbackList = await fetchFeedbacksFromDb();
+        if (!user) {
+          toast.error('You must be logged in to view feedbacks');
+          navigate('/login');
+          return;
+        }
+        const feedbackList = await fetchFeedbacksFromDb(user.uid);
         setFeedbacks(feedbackList);
         setFilteredFeedbacks(feedbackList);
       } catch (error) {
         console.error('Error fetching feedbacks:', error);
+        toast.error('Error fetching feedbacks. Please try again.');
       }
     };
 
     fetchFeedbacks();
-  }, []);
+  }, [user, navigate]);
 
   useEffect(() => {
     const filtered = feedbacks.filter(
@@ -123,16 +131,16 @@ export default function Feedbacks() {
   };
 
   const handleDelete = async () => {
-    if (selectedFeedbackId) {
+    if (selectedFeedbackId && user) {
       try {
-        await deleteFeedbackFromDb(selectedFeedbackId);
+        await deleteFeedbackFromDb(selectedFeedbackId, user.uid);
         setFeedbacks((prevFeedbacks) =>
           prevFeedbacks.filter((feedback) => feedback.id !== selectedFeedbackId)
         );
         toast.success('Feedback successfully deleted!');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting feedback:', error);
-        toast.error('Error deleting feedback. Please try again.');
+        toast.error(error.message || 'Error deleting feedback. Please try again.');
       } finally {
         setIsDeleteModalOpen(false);
         setSelectedFeedbackId(null);

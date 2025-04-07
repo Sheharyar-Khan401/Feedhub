@@ -6,6 +6,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { sendEmail } from 'src/services/emailService';
 import { addFeedbackToDb } from '../models/firebaseModel';
+import { useAuth } from '../contexts/auth-context';
 
 interface FormData {
   name: string;
@@ -31,6 +32,7 @@ export default function AddFeedback() {
     option4: '',
   });
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const steps = ['Personal Information', 'Survey Details'];
 
@@ -46,7 +48,11 @@ export default function AddFeedback() {
 
   const handleSubmit = async () => {
     try {
-      const feedbackId = await addFeedbackToDb(formData);
+      if (!user) {
+        toast.error('You must be logged in to create feedback');
+        return;
+      }
+      const feedbackId = await addFeedbackToDb(formData, user.uid);
       const surveyLink = await generateSurveyLink(feedbackId);
 
       // Send the survey link via email (pseudo-code)

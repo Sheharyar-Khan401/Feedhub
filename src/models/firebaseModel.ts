@@ -22,6 +22,7 @@ export interface Feedback {
   option4: string;
   createdAt?: any;
   updatedAt?: any;
+  createdBy: string;
   votes: {
     voterName: string;
     selectedOption: string;
@@ -29,13 +30,15 @@ export interface Feedback {
 }
 
 // Function to retrieve feedbacks
-export const fetchFeedbacksFromDb = async (): Promise<Feedback[]> => {
+export const fetchFeedbacksFromDb = async (userId: string): Promise<Feedback[]> => {
   try {
     const querySnapshot = await getDocs(collection(db, 'feedbacks'));
-    return querySnapshot.docs.map((feedbackDoc) => ({
-      id: feedbackDoc.id,
-      ...feedbackDoc.data(),
-    })) as Feedback[];
+    return querySnapshot.docs
+      .map((feedbackDoc) => ({
+        id: feedbackDoc.id,
+        ...feedbackDoc.data(),
+      }))
+      .filter((feedback) => (feedback as Feedback).createdBy === userId) as Feedback[];
   } catch (error) {
     console.error('Error fetching feedbacks:', error);
     throw error;
@@ -43,9 +46,20 @@ export const fetchFeedbacksFromDb = async (): Promise<Feedback[]> => {
 };
 
 // Function to delete feedback
-export const deleteFeedbackFromDb = async (feedbackId: string): Promise<void> => {
+export const deleteFeedbackFromDb = async (feedbackId: string, userId: string): Promise<void> => {
   try {
     const feedbackRef = doc(db, 'feedbacks', feedbackId);
+    const feedbackDoc = await getDoc(feedbackRef);
+    
+    if (!feedbackDoc.exists()) {
+      throw new Error('Feedback not found');
+    }
+
+    const feedback = feedbackDoc.data() as Feedback;
+    if (feedback.createdBy !== userId) {
+      throw new Error('You can only delete your own feedbacks');
+    }
+
     await deleteDoc(feedbackRef);
   } catch (error) {
     console.error('Error deleting feedback:', error);
@@ -54,11 +68,12 @@ export const deleteFeedbackFromDb = async (feedbackId: string): Promise<void> =>
 };
 
 // Function to add feedback
-export const addFeedbackToDb = async (formData: any): Promise<string> => {
+export const addFeedbackToDb = async (formData: any, userId: string): Promise<string> => {
   try {
     const docRef = await addDoc(collection(db, 'feedbacks'), {
       ...formData,
       createdAt: serverTimestamp(),
+      createdBy: userId,
       votes: [],
     });
     return docRef.id;
