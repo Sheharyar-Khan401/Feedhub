@@ -16,29 +16,46 @@ export interface Feedback {
   email: string;
   question: string;
   description: string;
-  option1: string;
-  option2: string;
-  option3: string;
-  option4: string;
+  questionType: 'multiple-choice' | 'rating' | 'text';
+  options?: {
+    option1: string;
+    option2: string;
+    option3: string;
+    option4: string;
+  };
+  ratingScale?: {
+    min: number;
+    max: number;
+    step: number;
+  };
   createdAt?: any;
   updatedAt?: any;
   createdBy: string;
   votes: {
     voterName: string;
-    selectedOption: string;
+    selectedOption?: string;
+    rating?: number;
+    textResponse?: string;
+    userId?: string;
   }[];
+  submittedBy: string[];
 }
 
 // Function to retrieve feedbacks
-export const fetchFeedbacksFromDb = async (userId: string): Promise<Feedback[]> => {
+export const fetchFeedbacksFromDb = async (userId: string): Promise<{ createdFeedbacks: Feedback[]; votedFeedbacks: Feedback[] }> => {
   try {
     const querySnapshot = await getDocs(collection(db, 'feedbacks'));
-    return querySnapshot.docs
-      .map((feedbackDoc) => ({
-        id: feedbackDoc.id,
-        ...feedbackDoc.data(),
-      }))
-      .filter((feedback) => (feedback as Feedback).createdBy === userId) as Feedback[];
+    const allFeedbacks = querySnapshot.docs.map((feedbackDoc) => ({
+      id: feedbackDoc.id,
+      ...feedbackDoc.data(),
+    })) as Feedback[];
+
+    const createdFeedbacks = allFeedbacks.filter((feedback) => feedback.createdBy === userId);
+    const votedFeedbacks = allFeedbacks.filter((feedback) => 
+      feedback.votes.some((vote) => vote.userId === userId)
+    );
+
+    return { createdFeedbacks, votedFeedbacks };
   } catch (error) {
     console.error('Error fetching feedbacks:', error);
     throw error;

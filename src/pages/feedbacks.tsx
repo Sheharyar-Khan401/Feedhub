@@ -14,6 +14,10 @@ import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import TablePagination from '@mui/material/TablePagination';
+import Chip from '@mui/material/Chip';
+import Tooltip from '@mui/material/Tooltip';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +31,7 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: 500,
   bgcolor: 'background.paper',
   boxShadow: 24,
   p: 4,
@@ -36,7 +40,9 @@ const modalStyle = {
 };
 
 export default function Feedbacks() {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [createdFeedbacks, setCreatedFeedbacks] = useState<Feedback[]>([]);
+  const [votedFeedbacks, setVotedFeedbacks] = useState<Feedback[]>([]);
+  const [activeTab, setActiveTab] = useState(0);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortBy, setSortBy] = useState<keyof Feedback | null>(null);
@@ -61,9 +67,10 @@ export default function Feedbacks() {
           navigate('/login');
           return;
         }
-        const feedbackList = await fetchFeedbacksFromDb(user.uid);
-        setFeedbacks(feedbackList);
-        setFilteredFeedbacks(feedbackList);
+        const { createdFeedbacks: fetchedCreated, votedFeedbacks: fetchedVoted } = await fetchFeedbacksFromDb(user.uid);
+        setCreatedFeedbacks(fetchedCreated);
+        setVotedFeedbacks(fetchedVoted);
+        setFilteredFeedbacks(fetchedCreated);
       } catch (error) {
         console.error('Error fetching feedbacks:', error);
         toast.error('Error fetching feedbacks. Please try again.');
@@ -74,17 +81,19 @@ export default function Feedbacks() {
   }, [user, navigate]);
 
   useEffect(() => {
-    const filtered = feedbacks.filter(
+    const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
+    const filtered = currentFeedbacks.filter(
       (feedback) =>
         feedback.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         feedback.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         feedback.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredFeedbacks(filtered);
-  }, [searchTerm, feedbacks]);
+  }, [searchTerm, createdFeedbacks, votedFeedbacks, activeTab]);
 
   useEffect(() => {
-    const filtered = feedbacks.filter((feedback) => {
+    const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
+    const filtered = currentFeedbacks.filter((feedback) => {
       const createdAt = feedback.createdAt?.toDate();
       if (startDate && createdAt && createdAt < new Date(startDate)) {
         return false;
@@ -95,7 +104,13 @@ export default function Feedbacks() {
       return true;
     });
     setFilteredFeedbacks(filtered);
-  }, [startDate, endDate, feedbacks]);
+  }, [startDate, endDate, createdFeedbacks, votedFeedbacks, activeTab]);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+    setFilteredFeedbacks(newValue === 0 ? createdFeedbacks : votedFeedbacks);
+    setPage(0);
+  };
 
   const handleSort = (field: keyof Feedback) => {
     const isAsc = sortBy === field && sortDirection === 'asc';
@@ -134,7 +149,7 @@ export default function Feedbacks() {
     if (selectedFeedbackId && user) {
       try {
         await deleteFeedbackFromDb(selectedFeedbackId, user.uid);
-        setFeedbacks((prevFeedbacks) =>
+        setFilteredFeedbacks((prevFeedbacks) =>
           prevFeedbacks.filter((feedback) => feedback.id !== selectedFeedbackId)
         );
         toast.success('Feedback successfully deleted!');
@@ -173,10 +188,14 @@ export default function Feedbacks() {
     { label: 'Email', key: 'email' },
     { label: 'Question', key: 'question' },
     { label: 'Description', key: 'description' },
-    { label: 'Option 1', key: 'option1' },
-    { label: 'Option 2', key: 'option2' },
-    { label: 'Option 3', key: 'option3' },
-    { label: 'Option 4', key: 'option4' },
+    { label: 'Question Type', key: 'questionType' },
+    { label: 'Option 1', key: 'options.option1' },
+    { label: 'Option 2', key: 'options.option2' },
+    { label: 'Option 3', key: 'options.option3' },
+    { label: 'Option 4', key: 'options.option4' },
+    { label: 'Rating Min', key: 'ratingScale.min' },
+    { label: 'Rating Max', key: 'ratingScale.max' },
+    { label: 'Rating Step', key: 'ratingScale.step' },
     { label: 'Created At', key: 'createdAt' },
     { label: 'Updated At', key: 'updatedAt' },
   ];
@@ -198,7 +217,7 @@ export default function Feedbacks() {
             <Button
               variant="contained"
               onClick={handleAdd}
-              fullWidth // Makes the button take the full width on smaller screens
+              fullWidth
             >
               Add Feedback
             </Button>
@@ -210,7 +229,7 @@ export default function Feedbacks() {
               size="small"
               value={searchTerm}
               onChange={handleSearch}
-              fullWidth // Adapts to screen size
+              fullWidth
             />
           </Grid>
           <Grid xs={12} sm={6} md={2}>
@@ -221,7 +240,7 @@ export default function Feedbacks() {
               size="small"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              fullWidth // Adapts to screen size
+              fullWidth
             />
           </Grid>
           <Grid xs={12} sm={6} md={2}>
@@ -232,12 +251,12 @@ export default function Feedbacks() {
               size="small"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              fullWidth // Adapts to screen size
+              fullWidth
             />
           </Grid>
           <Grid xs={12} md={2}>
             <CSVLink
-              data={feedbacks}
+              data={filteredFeedbacks}
               headers={csvHeaders}
               filename="feedbacks.csv"
               className="btn btn-primary"
@@ -250,21 +269,57 @@ export default function Feedbacks() {
         </Grid>
       </Box>
 
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange} aria-label="feedback tabs">
+          <Tab label="Created Feedbacks" />
+          <Tab label="Voted Feedbacks" />
+        </Tabs>
+      </Box>
+
       <Grid container spacing={3}>
         <Grid xs={12}>
-          <TableContainer component={Paper}>
-            <Table>
+          <TableContainer 
+            component={Paper} 
+            sx={{ 
+              maxWidth: '100%',
+              overflowX: 'auto',
+              '&::-webkit-scrollbar': {
+                height: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#f1f1f1',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#888',
+                borderRadius: '4px',
+                '&:hover': {
+                  background: '#555',
+                },
+              },
+            }}
+          >
+            <Table sx={{ minWidth: 1000 }}>
               <TableHead>
-                <TableRow>
+                <TableRow sx={{ 
+                  backgroundColor: 'background.paper',
+                  '& th': { 
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    padding: '16px',
+                    borderBottom: '2px solid',
+                    borderColor: 'divider'
+                  }
+                }}>
                   {[
                     'name',
                     'email',
                     'question',
                     'description',
-                    'option1',
-                    'option2',
-                    'option3',
-                    'option4',
+                    'questionType',
+                    'options',
+                    'ratingScale',
                     'Votes',
                   ].map((field) => (
                     <TableCell key={field}>
@@ -282,51 +337,155 @@ export default function Feedbacks() {
               </TableHead>
               <TableBody>
                 {paginatedFeedbacks.map((feedback) => (
-                  <TableRow key={feedback.id}>
+                  <TableRow 
+                    key={feedback.id}
+                    sx={{ 
+                      '&:hover': { 
+                        backgroundColor: 'action.hover',
+                      },
+                      '& td': { 
+                        padding: '12px 16px',
+                        fontSize: '0.875rem',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider'
+                      }
+                    }}
+                  >
                     <TableCell>{feedback.name}</TableCell>
                     <TableCell>{feedback.email}</TableCell>
-                    <TableCell>{feedback.question}</TableCell>
+                    <TableCell sx={{ maxWidth: '300px' }}>
+                      <Tooltip title={feedback.question}>
+                        <Typography
+                          sx={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {feedback.question}
+                        </Typography>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell sx={{ maxWidth: '200px' }}>
+                      <Tooltip title={feedback.description}>
+                        <Box
+                          dangerouslySetInnerHTML={{ __html: feedback.description }}
+                          sx={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            lineHeight: 1.4,
+                          }}
+                        />
+                      </Tooltip>
+                    </TableCell>
                     <TableCell>
-                      <Box
-                        dangerouslySetInnerHTML={{ __html: feedback.description }}
-                        sx={{
-                          maxWidth: '200px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                      {feedback.questionType ? <Chip 
+                        label={feedback.questionType}
+                        size="small"
+                        color={
+                          feedback.questionType === 'multiple-choice' ? 'primary' :
+                          feedback.questionType === 'rating' ? 'secondary' :
+                          feedback.questionType === 'text' ? 'info' : 'default'
+                        }
+                        sx={{ 
+                          textTransform: 'capitalize',
+                          fontWeight: 500
                         }}
+                      />: "-"}
+                    </TableCell>
+                    <TableCell sx={{ maxWidth: '200px' }}>
+                      {feedback.questionType === 'multiple-choice' && (
+                        <Box>
+                          {Object.values(feedback.options || {}).map((option, index) => (
+                            <Typography 
+                              key={index} 
+                              sx={{ 
+                                fontSize: '0.875rem',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 1,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {option}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {feedback.questionType === 'rating' && (
+                        <Box>
+                          <Typography sx={{ fontSize: '0.875rem' }}>
+                            {feedback.ratingScale?.min} - {feedback.ratingScale?.max}
+                          </Typography>
+                          <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                            Step: {feedback.ratingScale?.step}
+                          </Typography>
+                        </Box>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={feedback.votes?.length || 0}
+                        size="small"
+                        color="default"
+                        variant="outlined"
                       />
                     </TableCell>
-                    <TableCell>{feedback.option1}</TableCell>
-                    <TableCell>{feedback.option2}</TableCell>
-                    <TableCell>{feedback.option3}</TableCell>
-                    <TableCell>{feedback.option4}</TableCell>
-                    <TableCell>{feedback.votes?.length}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => openDetailsModal(feedback)}
-                      >
-                        Votes
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                        sx={{ mr: 1 }}
-                        onClick={() => handleUpdate(feedback.id)}
-                      >
-                        Update
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        onClick={() => openDeleteModal(feedback.id)}
-                      >
-                        Delete
-                      </Button>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="View Votes">
+                          <Button 
+                            variant="outlined" 
+                            size="small"
+                            onClick={() => openDetailsModal(feedback)}
+                            sx={{ 
+                              minWidth: 'auto',
+                              px: 1,
+                              py: 0.5
+                            }}
+                          >
+                            <Typography sx={{ fontSize: '0.75rem' }}>Votes</Typography>
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Update Feedback">
+                          <Button 
+                            variant="outlined" 
+                            size="small"
+                            onClick={() => navigate(`/update-feedback/${feedback.id}`)}
+                            sx={{ 
+                              minWidth: 'auto',
+                              px: 1,
+                              py: 0.5
+                            }}
+                          >
+                            <Typography sx={{ fontSize: '0.75rem' }}>Update</Typography>
+                          </Button>
+                        </Tooltip>
+                        <Tooltip title="Delete Feedback">
+                          <Button 
+                            variant="outlined" 
+                            color="error"
+                            size="small"
+                            onClick={() => openDeleteModal(feedback.id)}
+                            sx={{ 
+                              minWidth: 'auto',
+                              px: 1,
+                              py: 0.5
+                            }}
+                          >
+                            <Typography sx={{ fontSize: '0.75rem' }}>Delete</Typography>
+                          </Button>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -340,6 +499,13 @@ export default function Feedbacks() {
             onPageChange={handlePageChange}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleRowsPerPageChange}
+            sx={{ 
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                fontSize: '0.875rem'
+              }
+            }}
           />
         </Grid>
       </Grid>
@@ -369,15 +535,27 @@ export default function Feedbacks() {
       {/* Modal to View Votes */}
       <Modal open={isDetailsModalOpen} onClose={closeDetailsModal}>
         <Box sx={{ ...modalStyle, width: 500 }}>
-          <Typography variant="h6">Votes</Typography>
+          <Typography variant="h6">Responses</Typography>
           {selectedDetails?.votes.map((vote, index) => (
-            <Box key={index} sx={{ mb: 1 }}>
+            <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
               <Typography>
                 <strong>Name:</strong> {vote.voterName}
               </Typography>
-              <Typography>
-                <strong>Selected Option:</strong> {vote.selectedOption}
-              </Typography>
+              {selectedDetails.questionType === 'multiple-choice' && (
+                <Typography>
+                  <strong>Selected Option:</strong> {vote.selectedOption}
+                </Typography>
+              )}
+              {selectedDetails.questionType === 'rating' && (
+                <Typography>
+                  <strong>Rating:</strong> {vote.rating}
+                </Typography>
+              )}
+              {selectedDetails.questionType === 'text' && (
+                <Typography>
+                  <strong>Response:</strong> {vote.textResponse}
+                </Typography>
+              )}
             </Box>
           ))}
           <Button variant="outlined" onClick={closeDetailsModal} sx={{ mt: 2 }}>
