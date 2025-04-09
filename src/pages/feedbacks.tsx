@@ -402,21 +402,41 @@ export default function Feedbacks() {
                     <TableCell sx={{ maxWidth: '200px' }}>
                       {feedback.questionType === 'multiple-choice' && (
                         <Box>
-                          {Object.values(feedback.options || {}).map((option, index) => (
-                            <Typography 
-                              key={index} 
-                              sx={{ 
-                                fontSize: '0.875rem',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 1,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {option}
-                            </Typography>
-                          ))}
+                          {feedback.options ? (
+                            Array.isArray(feedback.options) ? (
+                              feedback.options.map((option: string, index: number) => (
+                                <Typography 
+                                  key={index} 
+                                  sx={{ 
+                                    fontSize: '0.875rem',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 1,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  }}
+                                >
+                                  {option}
+                                </Typography>
+                              ))
+                            ) : (
+                              Object.values(feedback.options as Record<string, string>).map((option: string, index: number) => (
+                                <Typography 
+                                  key={index} 
+                                  sx={{ 
+                                    fontSize: '0.875rem',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 1,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  }}
+                                >
+                                  {option}
+                                </Typography>
+                              ))
+                            )
+                          ) : null}
                         </Box>
                       )}
                     </TableCell>

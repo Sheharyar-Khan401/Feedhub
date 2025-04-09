@@ -17,12 +17,7 @@ export interface Feedback {
   question: string;
   description: string;
   questionType: 'multiple-choice' | 'rating' | 'text';
-  options?: {
-    option1: string;
-    option2: string;
-    option3: string;
-    option4: string;
-  };
+  options?: string[];
   ratingScale?: {
     min: number;
     max: number;

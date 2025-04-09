@@ -13,12 +13,7 @@ interface FormData {
   question: string;
   description: string;
   questionType: 'multiple-choice' | 'rating' | 'text';
-  options: {
-    option1: string;
-    option2: string;
-    option3: string;
-    option4: string;
-  };
+  options: string[];
   ratingScale: {
     min: number;
     max: number;
@@ -36,12 +31,7 @@ export default function UpdateFeedback() {
     question: '',
     description: '',
     questionType: 'multiple-choice',
-    options: {
-      option1: '',
-      option2: '',
-      option3: '',
-      option4: '',
-    },
+    options: ['', ''],
     ratingScale: {
       min: 1,
       max: 5,
@@ -56,7 +46,12 @@ export default function UpdateFeedback() {
       if (id) {
         try {
           const feedback = await fetchFeedbackFromDb(id);
-          setFormData(feedback as FormData);
+          // Convert the old options format to the new array format
+          const convertedFeedback = {
+            ...feedback,
+            options: feedback.options ? Object.values(feedback.options) : ['', ''],
+          };
+          setFormData(convertedFeedback as FormData);
         } catch (error) {
           toast.error(error.message || 'Error fetching survey.');
           navigate('/feedbacks');
@@ -74,13 +69,24 @@ export default function UpdateFeedback() {
     setFormData((prevData) => ({ ...prevData, [field]: value }));
   };
 
-  const handleOptionChange = (optionKey: keyof FormData['options'], value: string) => {
+  const handleOptionChange = (index: number, value: string) => {
     setFormData((prevData) => ({
       ...prevData,
-      options: {
-        ...prevData.options,
-        [optionKey]: value,
-      },
+      options: prevData.options.map((option, i) => (i === index ? value : option)),
+    }));
+  };
+
+  const addOption = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      options: [...prevData.options, ''],
+    }));
+  };
+
+  const removeOption = (index: number) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      options: prevData.options.filter((_, i) => i !== index),
     }));
   };
 
@@ -164,30 +170,33 @@ export default function UpdateFeedback() {
 
             {formData.questionType === 'multiple-choice' && (
               <Box display="flex" flexDirection="column" gap={2}>
-                <TextField
-                  label="Option 1"
-                  fullWidth
-                  value={formData.options.option1}
-                  onChange={(e) => handleOptionChange('option1', e.target.value)}
-                />
-                <TextField
-                  label="Option 2"
-                  fullWidth
-                  value={formData.options.option2}
-                  onChange={(e) => handleOptionChange('option2', e.target.value)}
-                />
-                <TextField
-                  label="Option 3"
-                  fullWidth
-                  value={formData.options.option3}
-                  onChange={(e) => handleOptionChange('option3', e.target.value)}
-                />
-                <TextField
-                  label="Option 4"
-                  fullWidth
-                  value={formData.options.option4}
-                  onChange={(e) => handleOptionChange('option4', e.target.value)}
-                />
+                {formData.options.map((option, index) => (
+                  <Box key={index} display="flex" gap={1}>
+                    <TextField
+                      label={`Option ${index + 1}`}
+                      fullWidth
+                      value={option}
+                      onChange={(e) => handleOptionChange(index, e.target.value)}
+                    />
+                    {formData.options.length > 2 && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => removeOption(index)}
+                        sx={{ minWidth: '40px' }}
+                      >
+                        -
+                      </Button>
+                    )}
+                  </Box>
+                ))}
+                <Button
+                  variant="outlined"
+                  onClick={addOption}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Add Option
+                </Button>
               </Box>
             )}
 
