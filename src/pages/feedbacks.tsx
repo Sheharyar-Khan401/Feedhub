@@ -22,6 +22,19 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { CSVLink } from 'react-csv';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import type { Feedback } from '../models/firebaseModel';
 import { deleteFeedbackFromDb, fetchFeedbacksFromDb } from '../models/firebaseModel';
 import { useAuth } from '../contexts/auth-context';
@@ -37,6 +50,141 @@ const modalStyle = {
   p: 4,
   textAlign: 'center',
   borderRadius: '8px',
+};
+
+// Add this type definition before the FeedbackVisualization component
+type TooltipData = {
+  option: string;
+  count: number;
+  percentage: string;
+};
+
+// Add this new component for visualizations
+const FeedbackVisualization = ({ feedback }: { feedback: Feedback }) => {
+  if (!feedback.votes || feedback.votes.length === 0) {
+    return (
+      <Box sx={{ p: 2, textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          No votes yet
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (feedback.questionType === 'multiple-choice') {
+    // Count votes for each option
+    const voteCounts = feedback.votes.reduce((acc: Record<string, number>, vote) => {
+      if (vote.selectedOption) {
+        const option = vote.selectedOption;
+        acc[option] = (acc[option] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const data = Object.entries(voteCounts).map(([option, count]) => ({
+      option,
+      count
+    }));
+
+    // Find the most selected option
+    const mostSelected = data.reduce((max, current) => 
+      current.count > max.count ? current : max, data[0]
+    );
+
+    // Calculate percentage for each option
+    const totalVotes = data.reduce((sum, item) => sum + item.count, 0);
+    const dataWithPercentage = data.map(item => ({
+      ...item,
+      percentage: ((item.count / totalVotes) * 100).toFixed(1)
+    }));
+
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Response Analysis
+        </Typography>
+        <Typography variant="body1" color="primary" sx={{ mb: 2 }}>
+          Most selected option: <strong>{mostSelected.option}</strong> ({mostSelected.count} votes, {((mostSelected.count / totalVotes) * 100).toFixed(1)}%)
+        </Typography>
+        <Box sx={{ height: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={dataWithPercentage}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="option" />
+              <YAxis />
+              <RechartsTooltip 
+                formatter={(value: number, name: string, item?: { payload?: TooltipData }) => [
+                  `${value} votes (${item?.payload?.percentage || '0'}%)`,
+                  'Count'
+                ]}
+              />
+              <Legend />
+              <Bar 
+                dataKey="count" 
+                fill="#8884d8"
+                label={{ position: 'top' }}
+              >
+                {dataWithPercentage.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`}
+                    fill={entry.option === mostSelected.option ? '#1976d2' : '#8884d8'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (feedback.questionType === 'rating') {
+    // Count votes for each rating
+    const voteCounts = feedback.votes.reduce((acc: Record<string, number>, vote) => {
+      if (typeof vote.rating === 'number') {
+        const rating = vote.rating.toString();
+        acc[rating] = (acc[rating] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const data = Object.entries(voteCounts).map(([rating, count]) => ({
+      rating: `Rating ${rating}`,
+      count
+    }));
+
+    // Calculate average rating
+    const totalVotes = data.reduce((sum, item) => sum + item.count, 0);
+    const sumRatings = data.reduce((sum, item) => 
+      sum + (parseInt(item.rating.split(' ')[1], 10) * item.count), 0
+    );
+    const averageRating = (sumRatings / totalVotes).toFixed(1);
+
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Response Analysis
+        </Typography>
+        <Typography variant="body1" color="primary" sx={{ mb: 2 }}>
+          Average Rating: <strong>{averageRating}</strong> out of {feedback.ratingScale?.max || 5}
+        </Typography>
+        <Box sx={{ height: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="rating" />
+              <YAxis />
+              <RechartsTooltip />
+              <Legend />
+              <Bar dataKey="count" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Box>
+      </Box>
+    );
+  }
+
+  return null;
 };
 
 export default function Feedbacks() {
@@ -554,33 +702,125 @@ export default function Feedbacks() {
 
       {/* Modal to View Votes */}
       <Modal open={isDetailsModalOpen} onClose={closeDetailsModal}>
-        <Box sx={{ ...modalStyle, width: 500 }}>
-          <Typography variant="h6">Responses</Typography>
-          {selectedDetails?.votes.map((vote, index) => (
-            <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
-              <Typography>
-                <strong>Name:</strong> {vote.voterName}
-              </Typography>
-              {selectedDetails.questionType === 'multiple-choice' && (
-                <Typography>
-                  <strong>Selected Option:</strong> {vote.selectedOption}
-                </Typography>
-              )}
-              {selectedDetails.questionType === 'rating' && (
-                <Typography>
-                  <strong>Rating:</strong> {vote.rating}
-                </Typography>
-              )}
-              {selectedDetails.questionType === 'text' && (
-                <Typography>
-                  <strong>Response:</strong> {vote.textResponse}
-                </Typography>
-              )}
+        <Box sx={{ ...modalStyle, width: 600, maxHeight: '80vh', overflowY: 'auto' }}>
+          <Typography variant="h6" gutterBottom>Responses</Typography>
+          {selectedDetails && <FeedbackVisualization feedback={selectedDetails} />}
+          
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="subtitle1" gutterBottom sx={{ 
+              color: 'text.secondary',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
+              <span>Individual Responses</span>
+              <Chip 
+                label={`${selectedDetails?.votes.length || 0} total`}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            </Typography>
+            
+            <Box sx={{ 
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              mt: 2
+            }}>
+              {selectedDetails?.votes.map((vote, index) => (
+                <Paper 
+                  key={index} 
+                  elevation={0}
+                  sx={{ 
+                    p: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    backgroundColor: 'background.neutral'
+                  }}
+                >
+                  <Typography variant="subtitle2" sx={{ 
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    mb: 1
+                  }}>
+                    {vote.voterName}
+                  </Typography>
+
+                  {selectedDetails.questionType === 'multiple-choice' && (
+                    <Box sx={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mt: 1
+                    }}>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Selected:
+                      </Typography>
+                      <Chip 
+                        label={vote.selectedOption}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </Box>
+                  )}
+
+                  {selectedDetails.questionType === 'rating' && (
+                    <Box sx={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mt: 1
+                    }}>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Rating:
+                      </Typography>
+                      <Chip 
+                        label={`${vote.rating} / ${selectedDetails.ratingScale?.max || 5}`}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    </Box>
+                  )}
+
+                  {selectedDetails.questionType === 'text' && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Response:
+                      </Typography>
+                      <Typography variant="body2" sx={{ 
+                        mt: 0.5,
+                        p: 1,
+                        backgroundColor: 'background.paper',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider'
+                      }}>
+                        {vote.textResponse}
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
+              ))}
             </Box>
-          ))}
-          <Button variant="outlined" onClick={closeDetailsModal} sx={{ mt: 2 }}>
-            Close
-          </Button>
+          </Box>
+
+          <Box sx={{ 
+            mt: 3,
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}>
+            <Button 
+              variant="outlined" 
+              onClick={closeDetailsModal}
+              sx={{ minWidth: 100 }}
+            >
+              Close
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </DashboardContent>

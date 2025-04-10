@@ -25,11 +25,28 @@ service cloud.firestore {
     
     // Feedbacks collection rules
     match /feedbacks/{feedbackId} {
+      // Allow any authenticated user to read feedbacks
       allow read: if isAuthenticated();
+      
+      // Allow any authenticated user to create new feedbacks
       allow create: if isAuthenticated();
+      
+      // Allow updates in two cases:
+      // 1. The feedback creator can update anything
+      // 2. Any authenticated user can update only the votes and submittedBy arrays
       allow update: if isAuthenticated() && 
-                   ((resource.data.createdBy == request.auth.uid) || 
-                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])));
+                   (
+                     // Case 1: Feedback creator can update anything
+                     resource.data.createdBy == request.auth.uid ||
+                     
+                     // Case 2: Any user can update only the votes and submittedBy arrays
+                     (
+                       // Check if only votes and submittedBy fields are being modified
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes', 'submittedBy'])
+                     )
+                   );
+      
+      // Only the feedback creator can delete their feedback
       allow delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
     }
     
