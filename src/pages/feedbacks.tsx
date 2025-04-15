@@ -44,12 +44,15 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 500,
+  width: { xs: '90%', sm: '80%', md: '600px' },
+  maxWidth: '90vw',
+  maxHeight: '90vh',
   bgcolor: 'background.paper',
   boxShadow: 24,
-  p: 4,
+  p: { xs: 2, sm: 3, md: 4 },
   textAlign: 'center',
   borderRadius: '8px',
+  overflow: 'auto',
 };
 
 // Add this type definition before the FeedbackVisualization component
@@ -57,6 +60,13 @@ type TooltipData = {
   option: string;
   count: number;
   percentage: string;
+};
+
+// Add this helper function at the top of the file, after the imports
+const stripHtml = (html: string) => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
 };
 
 // Add this new component for visualizations
@@ -470,7 +480,7 @@ export default function Feedbacks() {
                     'ratingScale',
                     'Votes',
                   ].map((field) => (
-                    <TableCell key={field}>
+                    <TableCell key={field} sx={{ width: 150 }}>
                       <TableSortLabel
                         active={sortBy === field}
                         direction={sortDirection}
@@ -480,7 +490,7 @@ export default function Feedbacks() {
                       </TableSortLabel>
                     </TableCell>
                   ))}
-                  <TableCell>Actions</TableCell>
+                  <TableCell sx={{ width: 200 }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -499,10 +509,36 @@ export default function Feedbacks() {
                       }
                     }}
                   >
-                    <TableCell>{feedback.name}</TableCell>
-                    <TableCell>{feedback.email}</TableCell>
-                    <TableCell sx={{ maxWidth: '300px' }}>
-                      <Tooltip title={feedback.question}>
+                    <TableCell>
+                      <Tooltip title={feedback.name} placement="top">
+                        <Typography
+                          sx={{
+                            maxWidth: 150,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {feedback.name}
+                        </Typography>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title={feedback.email} placement="top">
+                        <Typography
+                          sx={{
+                            maxWidth: 200,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {feedback.email}
+                        </Typography>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell sx={{ maxWidth: 400 }}>
+                      <Tooltip title={feedback.question} placement="top">
                         <Typography
                           sx={{
                             display: '-webkit-box',
@@ -511,14 +547,16 @@ export default function Feedbacks() {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             lineHeight: 1.4,
+                            minWidth: 200,
+                            maxWidth: 400,
                           }}
                         >
                           {feedback.question}
                         </Typography>
                       </Tooltip>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: '200px' }}>
-                      <Tooltip title={feedback.description}>
+                    <TableCell sx={{ maxWidth: 400 }}>
+                      <Tooltip title={stripHtml(feedback.description)} placement="top">
                         <Box
                           dangerouslySetInnerHTML={{ __html: feedback.description }}
                           sx={{
@@ -528,60 +566,69 @@ export default function Feedbacks() {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             lineHeight: 1.4,
+                            '& p': {
+                              margin: 0,
+                            },
+                            minWidth: 200,
+                            maxWidth: 400,
                           }}
                         />
                       </Tooltip>
                     </TableCell>
                     <TableCell>
-                      {feedback.questionType ? <Chip 
-                        label={feedback.questionType}
-                        size="small"
-                        color={
-                          feedback.questionType === 'multiple-choice' ? 'primary' :
-                          feedback.questionType === 'rating' ? 'secondary' :
-                          feedback.questionType === 'text' ? 'info' : 'default'
-                        }
-                        sx={{ 
-                          textTransform: 'capitalize',
-                          fontWeight: 500
-                        }}
-                      />: "-"}
+                      {feedback.questionType ? (
+                        <Chip 
+                          label={feedback.questionType}
+                          size="small"
+                          color={
+                            feedback.questionType === 'multiple-choice' ? 'primary' :
+                            feedback.questionType === 'rating' ? 'secondary' :
+                            feedback.questionType === 'text' ? 'info' : 'default'
+                          }
+                          sx={{ 
+                            textTransform: 'capitalize',
+                            fontWeight: 500
+                          }}
+                        />
+                      ) : "-"}
                     </TableCell>
-                    <TableCell sx={{ maxWidth: '200px' }}>
+                    <TableCell sx={{ maxWidth: 200 }}>
                       {feedback.questionType === 'multiple-choice' && (
                         <Box>
                           {feedback.options ? (
                             Array.isArray(feedback.options) ? (
                               feedback.options.map((option: string, index: number) => (
-                                <Typography 
-                                  key={index} 
-                                  sx={{ 
-                                    fontSize: '0.875rem',
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 1,
-                                    WebkitBoxOrient: 'vertical',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                  }}
-                                >
-                                  {option}
-                                </Typography>
+                                <Tooltip key={index} title={option} placement="top">
+                                  <Typography 
+                                    sx={{ 
+                                      fontSize: '0.875rem',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 1,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                    }}
+                                  >
+                                    {option}
+                                  </Typography>
+                                </Tooltip>
                               ))
                             ) : (
                               Object.values(feedback.options as Record<string, string>).map((option: string, index: number) => (
-                                <Typography 
-                                  key={index} 
-                                  sx={{ 
-                                    fontSize: '0.875rem',
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 1,
-                                    WebkitBoxOrient: 'vertical',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                  }}
-                                >
-                                  {option}
-                                </Typography>
+                                <Tooltip key={index} title={option} placement="top">
+                                  <Typography 
+                                    sx={{ 
+                                      fontSize: '0.875rem',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 1,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                    }}
+                                  >
+                                    {option}
+                                  </Typography>
+                                </Tooltip>
                               ))
                             )
                           ) : null}
@@ -702,38 +749,93 @@ export default function Feedbacks() {
 
       {/* Modal to View Votes */}
       <Modal open={isDetailsModalOpen} onClose={closeDetailsModal}>
-        <Box sx={{ ...modalStyle, width: 600, maxHeight: '80vh', overflowY: 'auto' }}>
-          <Typography variant="h6" gutterBottom>Responses</Typography>
-          {selectedDetails && <FeedbackVisualization feedback={selectedDetails} />}
+        <Box sx={{ ...modalStyle }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
+            mb: { xs: 1, sm: 2 }
+          }}>
+            Responses
+          </Typography>
           
-          <Box sx={{ mt: 3 }}>
+          {/* Visualization Section */}
+          {selectedDetails && (
+            <Box sx={{ 
+              height: { xs: 200, sm: 250, md: 300 },
+              mb: { xs: 2, sm: 3 },
+              position: 'relative',
+              overflow: 'hidden',
+              borderRadius: 2,
+              backgroundColor: 'background.neutral',
+              border: '1px solid',
+              borderColor: 'divider'
+            }}>
+              <Box sx={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                p: { xs: 1, sm: 2 }
+              }}>
+                <FeedbackVisualization feedback={selectedDetails} />
+              </Box>
+            </Box>
+          )}
+          
+          {/* Individual Responses Section */}
+          <Box sx={{ 
+            mt: { xs: 2, sm: 3 },
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            pt: { xs: 2, sm: 3 }
+          }}>
             <Typography variant="subtitle1" gutterBottom sx={{ 
               color: 'text.secondary',
               display: 'flex',
               alignItems: 'center',
-              gap: 1
+              gap: 1,
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              flexWrap: 'wrap',
+              justifyContent: 'center'
             }}>
               <span>Individual Responses</span>
               <Chip 
-                label={`${selectedDetails?.votes.length || 0} total`}
+                label={`${selectedDetails?.votes?.length || 0} total`}
                 size="small"
                 color="primary"
                 variant="outlined"
+                sx={{ 
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  height: { xs: 24, sm: 28 }
+                }}
               />
             </Typography>
             
             <Box sx={{ 
               display: 'flex',
               flexDirection: 'column',
-              gap: 2,
-              mt: 2
+              gap: { xs: 1.5, sm: 2 },
+              mt: { xs: 1.5, sm: 2 },
+              maxHeight: { xs: '40vh', sm: '50vh' },
+              overflowY: 'auto',
+              pr: 1,
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'divider',
+                borderRadius: '3px',
+              },
             }}>
               {selectedDetails?.votes.map((vote, index) => (
                 <Paper 
                   key={index} 
                   elevation={0}
                   sx={{ 
-                    p: 2,
+                    p: { xs: 1.5, sm: 2 },
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 2,
@@ -743,7 +845,8 @@ export default function Feedbacks() {
                   <Typography variant="subtitle2" sx={{ 
                     color: 'text.primary',
                     fontWeight: 600,
-                    mb: 1
+                    mb: 1,
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
                   }}>
                     {vote.voterName}
                   </Typography>
@@ -753,9 +856,13 @@ export default function Feedbacks() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1,
-                      mt: 1
+                      mt: 1,
+                      flexWrap: 'wrap'
                     }}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      <Typography variant="body2" sx={{ 
+                        color: 'text.secondary',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}>
                         Selected:
                       </Typography>
                       <Chip 
@@ -763,6 +870,10 @@ export default function Feedbacks() {
                         size="small"
                         color="primary"
                         variant="outlined"
+                        sx={{ 
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          height: { xs: 24, sm: 28 }
+                        }}
                       />
                     </Box>
                   )}
@@ -772,9 +883,13 @@ export default function Feedbacks() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1,
-                      mt: 1
+                      mt: 1,
+                      flexWrap: 'wrap'
                     }}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      <Typography variant="body2" sx={{ 
+                        color: 'text.secondary',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}>
                         Rating:
                       </Typography>
                       <Chip 
@@ -782,13 +897,20 @@ export default function Feedbacks() {
                         size="small"
                         color="secondary"
                         variant="outlined"
+                        sx={{ 
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          height: { xs: 24, sm: 28 }
+                        }}
                       />
                     </Box>
                   )}
 
                   {selectedDetails.questionType === 'text' && (
                     <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      <Typography variant="body2" sx={{ 
+                        color: 'text.secondary',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}>
                         Response:
                       </Typography>
                       <Typography variant="body2" sx={{ 
@@ -797,7 +919,9 @@ export default function Feedbacks() {
                         backgroundColor: 'background.paper',
                         borderRadius: 1,
                         border: '1px solid',
-                        borderColor: 'divider'
+                        borderColor: 'divider',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        wordBreak: 'break-word'
                       }}>
                         {vote.textResponse}
                       </Typography>
@@ -809,14 +933,17 @@ export default function Feedbacks() {
           </Box>
 
           <Box sx={{ 
-            mt: 3,
+            mt: { xs: 2, sm: 3 },
             display: 'flex',
             justifyContent: 'flex-end'
           }}>
             <Button 
               variant="outlined" 
               onClick={closeDetailsModal}
-              sx={{ minWidth: 100 }}
+              sx={{ 
+                minWidth: { xs: 80, sm: 100 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+              }}
             >
               Close
             </Button>

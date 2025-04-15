@@ -10,7 +10,7 @@ export const sendEmail = async (to: string, content: string) => {
 
     const serviceId = 'service_ep5olnc';
     const templateId = 'template_u4xt6i9';
-    const publicKey = 'zp0czIsAttdKpsFRa';
+    const publicKey = 'MYbU9nM2Z2Ov2Vt9W';
 
     await emailjs.send(serviceId, templateId, templateParams, publicKey);
     console.log('Email sent successfully');

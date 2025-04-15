@@ -33,6 +33,12 @@ const MuiButton: Components<Theme>['MuiButton'] = {
     sizeLarge: {
       minHeight: 48,
     },
+    root: ({ theme }) => ({
+      [theme.breakpoints.down('sm')]: {
+        padding: '8px 16px',
+        fontSize: '0.875rem',
+      },
+    }),
   },
 };
 
@@ -43,6 +49,9 @@ const MuiCard: Components<Theme>['MuiCard'] = {
       position: 'relative',
       boxShadow: theme.customShadows.card,
       borderRadius: theme.shape.borderRadius * 2,
+      [theme.breakpoints.down('sm')]: {
+        borderRadius: theme.shape.borderRadius,
+      },
     }),
   },
 };
@@ -55,6 +64,9 @@ const MuiCardHeader: Components<Theme>['MuiCardHeader'] = {
   styleOverrides: {
     root: ({ theme }) => ({
       padding: theme.spacing(3, 3, 0),
+      [theme.breakpoints.down('sm')]: {
+        padding: theme.spacing(2, 2, 0),
+      },
     }),
   },
 };
@@ -63,6 +75,11 @@ const MuiOutlinedInput: Components<Theme>['MuiOutlinedInput'] = {
   styleOverrides: {
     notchedOutline: ({ theme }) => ({
       borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
+    }),
+    root: ({ theme }) => ({
+      [theme.breakpoints.down('sm')]: {
+        fontSize: '0.875rem',
+      },
     }),
   },
 };
@@ -86,6 +103,16 @@ const MuiTableCell: Components<Theme>['MuiTableCell'] = {
       color: theme.vars.palette.text.secondary,
       fontWeight: theme.typography.fontWeightSemiBold,
       backgroundColor: theme.vars.palette.background.neutral,
+      [theme.breakpoints.down('sm')]: {
+        fontSize: theme.typography.pxToRem(12),
+        padding: theme.spacing(1),
+      },
+    }),
+    root: ({ theme }) => ({
+      [theme.breakpoints.down('sm')]: {
+        fontSize: theme.typography.pxToRem(12),
+        padding: theme.spacing(1),
+      },
     }),
   },
 };
@@ -94,18 +121,32 @@ const MuiMenuItem: Components<Theme>['MuiMenuItem'] = {
   styleOverrides: {
     root: ({ theme }) => ({
       ...theme.typography.body2,
+      [theme.breakpoints.down('sm')]: {
+        fontSize: theme.typography.pxToRem(12),
+        padding: theme.spacing(1, 2),
+      },
     }),
   },
 };
 
 const MuiLink: Components<Theme>['MuiLink'] = {
   defaultProps: { underline: 'hover' },
+  styleOverrides: {
+    root: ({ theme }) => ({
+      [theme.breakpoints.down('sm')]: {
+        fontSize: theme.typography.pxToRem(12),
+      },
+    }),
+  },
 };
 
 const MuiFormControlLabel: Components<Theme>['MuiFormControlLabel'] = {
   styleOverrides: {
     label: ({ theme }) => ({
       ...theme.typography.body2,
+      [theme.breakpoints.down('sm')]: {
+        fontSize: theme.typography.pxToRem(12),
+      },
     }),
   },
 };

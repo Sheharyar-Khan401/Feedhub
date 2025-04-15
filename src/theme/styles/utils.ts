@@ -11,6 +11,35 @@ export const mediaQueries = {
   upMd: '@media (min-width:900px)',
   upLg: '@media (min-width:1200px)',
   upXl: '@media (min-width:1536px)',
+  downSm: '@media (max-width:599px)',
+  downMd: '@media (max-width:899px)',
+  downLg: '@media (max-width:1199px)',
+  downXl: '@media (max-width:1535px)',
+};
+
+// Responsive utilities
+export const responsive = {
+  hidden: {
+    xs: { display: 'none' },
+    sm: { [mediaQueries.upSm]: { display: 'none' } },
+    md: { [mediaQueries.upMd]: { display: 'none' } },
+    lg: { [mediaQueries.upLg]: { display: 'none' } },
+    xl: { [mediaQueries.upXl]: { display: 'none' } },
+  },
+  visible: {
+    xs: { [mediaQueries.upSm]: { display: 'none' } },
+    sm: { display: 'none', [mediaQueries.upSm]: { display: 'block' } },
+    md: { display: 'none', [mediaQueries.upMd]: { display: 'block' } },
+    lg: { display: 'none', [mediaQueries.upLg]: { display: 'block' } },
+    xl: { display: 'none', [mediaQueries.upXl]: { display: 'block' } },
+  },
+  container: {
+    xs: { maxWidth: '100%', padding: '0 16px' },
+    sm: { maxWidth: '600px', padding: '0 16px' },
+    md: { maxWidth: '900px', padding: '0 24px' },
+    lg: { maxWidth: '1200px', padding: '0 24px' },
+    xl: { maxWidth: '1536px', padding: '0 24px' },
+  },
 };
 
 /**
