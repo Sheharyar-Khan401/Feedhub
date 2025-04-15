@@ -6,7 +6,6 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { Iconify } from '../iconify';
-import { AuthForm } from './auth-form';
 
 // ----------------------------------------------------------------------
 

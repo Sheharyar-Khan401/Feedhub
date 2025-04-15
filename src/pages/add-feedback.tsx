@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Stepper, Step, StepLabel, Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Slider } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Box, Stepper, Step, StepLabel, Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -37,7 +36,6 @@ export default function AddFeedback() {
       step: 1,
     },
   });
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const steps = ['Personal Information', 'Survey Details'];

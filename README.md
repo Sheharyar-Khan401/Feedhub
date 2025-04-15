@@ -1,8 +1,15 @@
-# Feedback App
+# Feedhub - Feedback Management System
 
-Feedhub is a modern web application designed to manage user feedback effectively. Built using React, Firebase, and Material UI, this application allows users to create, update, and manage feedback seamlessly. The project emphasizes clean architecture by separating Firebase logic into a dedicated model file.
+Feedhub is a modern web application designed to streamline the feedback collection and management process. It provides organizations with a powerful tool to gather, analyze, and act upon user feedback effectively. Built with a focus on user experience and data management, Feedhub helps businesses make data-driven decisions based on customer insights.
 
----
+## Project Purpose
+
+Feedhub aims to:
+- Simplify the feedback collection process
+- Provide real-time feedback management
+- Enable data-driven decision making
+- Offer comprehensive feedback analytics
+- Facilitate team collaboration on feedback items
 
 ## Features
 
@@ -12,8 +19,6 @@ Feedhub is a modern web application designed to manage user feedback effectively
 - **Feedback Listing**: Feedback is displayed in a sortable and paginated table.
 - **CSV Export**: Export feedback to a CSV file.
 - **Firebase Integration**: Firestore is used to store and manage feedback data.
-
----
 
 ## Tech Stack
 
@@ -28,87 +33,135 @@ Feedhub is a modern web application designed to manage user feedback effectively
   - React Toastify (for notifications)
   - React CSV (for CSV export)
 
----
+## Installation
 
-# Installation
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- Firebase account
 
-Follow these steps to set up the project locally:
+### Step-by-Step Setup
 
 1. Clone the repository:
-
 ```bash
 git clone https://github.com/eminsamed/Feedhub-Final.git
-
+cd Feedhub-Final
 ```
 
-2. Navigate to the project directory:
-
-```bash
-cd feedback-app
-```
-
-3. Install dependencies:
-
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-4. Set up Firebase:
+3. Configure Firebase:
+   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Enable Firestore Database
+   - Create a new web app in your Firebase project
+   - Copy the Firebase configuration
 
-   - Create a Firebase project in the Firebase Console.
-   - Add your Firebase configuration to a `.env` file or the `firebaseConfig.js` file.
+4. Set up environment variables:
+   Create a `.env.local` file in the root directory with your Firebase configuration:
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
 
 5. Start the development server:
-
 ```bash
 npm run dev
 ```
 
-6. Open the application in your browser at:
-
+6. Open your browser and navigate to:
 ```
 http://localhost:3000
 ```
 
-## Firebase Setup
-
-Make sure to configure Firebase for this project:
-
-1. Set up Firestore:
-
-   - Create a `feedbacks` collection in Firestore.
-   - Documents should have fields like `name`, `email`, `question`, `description`, `options`, etc.
-
-2. Update `firebaseConfig`:
-   - Replace the configuration in `firebase/firebaseConfig.js` with your Firebase project's credentials.
-
----
-
 ## Usage
 
-### Adding Feedback
+### For Administrators
 
-- Navigate to the **Add Feedback** page.
-- Fill in personal information and survey details.
-- Submit the form to create a feedback entry.
+1. **Dashboard Overview**
+   - Access real-time feedback statistics
+   - View feedback trends and patterns
+   - Monitor response rates
 
-### Updating Feedback
+2. **Feedback Management**
+   - Create and customize feedback forms
+   - Set up feedback categories
+   - Configure notification settings
+   - Manage user permissions
 
-- Go to the **Feedbacks** page.
-- Select a feedback entry and click the **Update** button.
-- Edit the details and save the changes.
+3. **Data Analysis**
+   - Export feedback data to CSV
+   - Generate feedback reports
+   - Analyze feedback trends
 
-### Deleting Feedback
+### For Users
 
-- Open the **Feedbacks** page.
-- Click the **Delete** button on the respective entry.
-- Confirm the deletion in the modal.
+1. **Submitting Feedback**
+   - Navigate to the feedback form
+   - Select appropriate category
+   - Provide detailed feedback
+   - Submit the form
 
-### Exporting Feedback
+2. **Viewing Responses**
+   - Access your feedback history
+   - Track feedback status
+   - View responses to your feedback
 
-- Use the **Export CSV** button on the **Feedbacks** page to download all feedback data as a CSV file.
+## Testing
 
----
+### Unit Testing
+
+Run unit tests using:
+```bash
+npm test
+```
+
+### Integration Testing
+
+Run integration tests using:
+```bash
+npm run test:integration
+```
+
+### End-to-End Testing
+
+Run E2E tests using:
+```bash
+npm run test:e2e
+```
+
+### Test Coverage
+
+Generate test coverage report:
+```bash
+npm run test:coverage
+```
+
+### Testing Guidelines
+
+1. **Unit Tests**
+   - Test individual components in isolation
+   - Mock external dependencies
+   - Focus on component behavior
+   - Maintain minimum 80% coverage
+
+2. **Integration Tests**
+   - Test component interactions
+   - Verify data flow
+   - Test API integrations
+   - Validate state management
+
+3. **E2E Tests**
+   - Test complete user flows
+   - Verify critical paths
+   - Test error scenarios
+   - Validate UI/UX requirements
 
 ## Development Notes
 
@@ -124,8 +177,6 @@ Make sure to configure Firebase for this project:
   - Material UI is used for consistent and responsive UI.
   - Additional custom styles are defined in the `theme` folder.
 
----
-
 ## Future Improvements
 
 - Add user authentication using Firebase Authentication.
@@ -133,13 +184,9 @@ Make sure to configure Firebase for this project:
 - Add unit and integration tests.
 - Enhance analytics and reporting for feedback data.
 
----
-
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
----
 
 ## Contributors
 

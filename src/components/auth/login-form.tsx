@@ -5,7 +5,6 @@ import { Box, IconButton, InputAdornment, Link, Stack, TextField, Alert } from '
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { Iconify } from '../iconify';
-import { AuthForm } from './auth-form';
 
 // ----------------------------------------------------------------------
 

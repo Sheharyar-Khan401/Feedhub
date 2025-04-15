@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Stepper, Step, StepLabel, Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Rating } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Stepper, Step, StepLabel, Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { fetchFeedbackFromDb, updateFeedbackInDb } from '../models/firebaseModel';
-import type { Feedback } from '../models/firebaseModel';
 
 interface FormData {
   name: string;

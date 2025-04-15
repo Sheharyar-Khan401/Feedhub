@@ -31,8 +31,6 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell
 } from 'recharts';
 import type { Feedback } from '../models/firebaseModel';
@@ -123,7 +121,7 @@ const FeedbackVisualization = ({ feedback }: { feedback: Feedback }) => {
               <XAxis dataKey="option" />
               <YAxis />
               <RechartsTooltip 
-                formatter={(value: number, name: string, item?: { payload?: TooltipData }) => [
+                formatter={(value: number, _name?: string, item?: { payload?: TooltipData }) => [
                   `${value} votes (${item?.payload?.percentage || '0'}%)`,
                   'Count'
                 ]}
@@ -264,7 +262,7 @@ export default function Feedbacks() {
     setFilteredFeedbacks(filtered);
   }, [startDate, endDate, createdFeedbacks, votedFeedbacks, activeTab]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
     setFilteredFeedbacks(newValue === 0 ? createdFeedbacks : votedFeedbacks);
     setPage(0);
@@ -286,7 +284,7 @@ export default function Feedbacks() {
     setSearchTerm(event.target.value);
   };
 
-  const handlePageChange = (event: unknown, newPage: number) => {
+  const handlePageChange = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
     setPage(newPage);
   };
 
@@ -297,10 +295,6 @@ export default function Feedbacks() {
 
   const handleAdd = () => {
     navigate('/add-feedback');
-  };
-
-  const handleUpdate = (id: string) => {
-    navigate(`/update-feedback/${id}`);
   };
 
   const handleDelete = async () => {

@@ -4,7 +4,6 @@ import { LoadingButton } from '@mui/lab';
 import { Box, Stack, TextField, Alert, Typography } from '@mui/material';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../firebase';
-import { AuthForm } from './auth-form';
 
 export function ResetPasswordForm() {
   const navigate = useNavigate();

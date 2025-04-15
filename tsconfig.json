@@ -1,28 +1,36 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "strict": true,
-    "noEmit": true,
-    "allowJs": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "jsx": "react-jsx",
     "skipLibCheck": true,
+    "types": ["jest", "node"],
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "esModuleInterop": true,
-    "isolatedModules": true,
     "strictNullChecks": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "Node",
-    "noFallthroughCasesInSwitch": true,
+    "allowJs": true,
     "useUnknownInCatchVariables": false,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["@playwright/test"]
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "e2e-tests"],
+  "include": ["src"],
   "exclude": ["node_modules"],
   "references": [
     {
