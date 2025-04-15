@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { toast } from 'react-toastify';
@@ -26,6 +26,7 @@ export default function SurveyVote() {
   const [rating, setRating] = useState<number | null>(null);
   const [textResponse, setTextResponse] = useState('');
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
     const fetchSurvey = async () => {
@@ -38,7 +39,10 @@ export default function SurveyVote() {
           // Check if user has already submitted
           if (user && surveyData.submittedBy?.includes(user.uid)) {
             setHasSubmitted(true);
-            toast.info('You have already submitted a response to this survey.');
+            if (!toastShownRef.current) {
+              toast.info('You have already submitted a response to this survey.');
+              toastShownRef.current = true;
+            }
           }
         } else {
           toast.error('Survey not found!');
