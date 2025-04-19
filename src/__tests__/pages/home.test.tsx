@@ -16,6 +16,6 @@ describe('Home Page', () => {
 
   it('displays the welcome message', () => {
     renderHome();
-    expect(screen.getByText(/Welcome to Feedhub/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hi, Welcome back 👋/i)).toBeInTheDocument();
   });
 }); 

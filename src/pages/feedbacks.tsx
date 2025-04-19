@@ -18,10 +18,6 @@ import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { DashboardContent } from 'src/layouts/dashboard';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import { CSVLink } from 'react-csv';
 import {
   BarChart,
   Bar,
@@ -33,6 +29,10 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { CSVLink } from 'react-csv';
+import { DashboardContent } from '../layouts/dashboard';
 import type { Feedback } from '../models/firebaseModel';
 import { deleteFeedbackFromDb, fetchFeedbacksFromDb } from '../models/firebaseModel';
 import { useAuth } from '../contexts/auth-context';
@@ -204,7 +204,7 @@ export default function Feedbacks() {
   const [sortBy, setSortBy] = useState<keyof Feedback | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<string | null>(null);

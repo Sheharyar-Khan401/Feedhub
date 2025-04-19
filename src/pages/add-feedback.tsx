@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
+import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
-import { sendEmail } from 'src/services/emailService';
-import { addFeedbackToDb } from '../models/firebaseModel';
-import { useAuth } from '../contexts/auth-context';
+import { sendEmail } from '@/services/emailService';
+import { addFeedbackToDb } from '@/models/firebaseModel';
+import { useAuth } from '@/contexts/auth-context';
 
 interface FormData {
   name: string;
@@ -37,6 +38,7 @@ export default function AddFeedback() {
     },
   });
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const steps = ['Personal Information', 'Survey Details'];
 
@@ -93,6 +95,7 @@ export default function AddFeedback() {
       await sendEmail(formData.email, `Your survey link: ${surveyLink}`);
 
       toast.success('Survey created and link sent!');
+      navigate('/feedbacks');
     } catch (error) {
       console.error('Error creating survey:', error);
       toast.error('Error creating survey. Please try again.');

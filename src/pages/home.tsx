@@ -1,10 +1,10 @@
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
-import { DashboardContent } from 'src/layouts/dashboard';
+import { DashboardContent } from '@/layouts/dashboard/main';
 
 export default function Page() {
   return (
-    <DashboardContent maxWidth="xl">
+    <DashboardContent maxWidth="xl" data-testid="home-page">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
         Hi, Welcome back 👋
       </Typography>

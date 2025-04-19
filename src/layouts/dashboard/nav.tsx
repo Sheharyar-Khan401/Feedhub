@@ -9,14 +9,14 @@ import { useTheme } from '@mui/material/styles';
 import ListItemButton from '@mui/material/ListItemButton';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 
-import { usePathname } from 'src/routes/hooks';
-import { RouterLink } from 'src/routes/components';
-import { useAuth } from 'src/contexts/auth-context';
+import { usePathname } from '../../routes/hooks';
+import { RouterLink } from '../../routes/components';
+import { useAuth } from '../../contexts/auth-context';
 
-import { varAlpha } from 'src/theme/styles';
+import { varAlpha } from '../../theme/styles';
 
-import { Logo } from 'src/components/logo';
-import { Scrollbar } from 'src/components/scrollbar';
+import { Logo } from '../../components/logo';
+import { Scrollbar } from '../../components/scrollbar';
 
 export type NavContentProps = {
   data: {

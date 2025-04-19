@@ -4,7 +4,9 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^src/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^react-quill/dist/quill.snow.css$': 'identity-obj-proxy',
   },
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',

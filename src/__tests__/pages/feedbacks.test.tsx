@@ -9,6 +9,20 @@ jest.mock('../../firebase', () => ({
   },
 }));
 
+// Mock auth context
+jest.mock('../../contexts/auth-context', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+  }),
+}));
+
+// Mock react-router-dom's useNavigate
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
+
 describe('Feedbacks Page', () => {
   const renderFeedbacks = () => render(
     <BrowserRouter>
@@ -16,14 +30,18 @@ describe('Feedbacks Page', () => {
     </BrowserRouter>
   );
 
-  it('renders without crashing', () => {
-    renderFeedbacks();
-    expect(screen.getByTestId('feedbacks-page')).toBeInTheDocument();
+  beforeEach(() => {
+    mockNavigate.mockClear();
   });
 
-  it('displays the feedback list header', () => {
+  it('renders without crashing', () => {
     renderFeedbacks();
-    expect(screen.getByText(/Feedback List/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Feedbacks/i })).toBeInTheDocument();
+  });
+
+  it('displays the feedbacks header', () => {
+    renderFeedbacks();
+    expect(screen.getByRole('heading', { name: /Feedbacks/i })).toBeInTheDocument();
   });
 
   it('shows the add feedback button', () => {
@@ -36,6 +54,6 @@ describe('Feedbacks Page', () => {
     renderFeedbacks();
     const addButton = screen.getByRole('button', { name: /Add Feedback/i });
     fireEvent.click(addButton);
-    expect(window.location.pathname).toBe('/add-feedback');
+    expect(mockNavigate).toHaveBeenCalledWith('/add-feedback');
   });
 }); 

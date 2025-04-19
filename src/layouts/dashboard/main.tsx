@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 import Container from '@mui/material/Container';
 
-import { layoutClasses } from 'src/layouts/classes';
+import { layoutClasses } from '@/layouts/classes';
 
 // ----------------------------------------------------------------------
 

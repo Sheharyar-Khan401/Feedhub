@@ -32,6 +32,10 @@ export default defineConfig({
         find: /^src(.+)/,
         replacement: path.join(process.cwd(), 'src/$1'),
       },
+      {
+        find: '@',
+        replacement: path.join(process.cwd(), 'src'),
+      },
     ],
   },
   server: { port: PORT, host: true },
