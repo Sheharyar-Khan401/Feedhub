@@ -37,6 +37,7 @@ export default function UpdateFeedback() {
       step: 1,
     },
   });
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const steps = ['Personal Information', 'Survey Details'];
 
@@ -45,12 +46,11 @@ export default function UpdateFeedback() {
       if (id) {
         try {
           const feedback = await fetchFeedbackFromDb(id);
-          // Convert the old options format to the new array format
-          const convertedFeedback = {
+          setFormData(prevData => ({
+            ...prevData,
             ...feedback,
-            options: feedback.options ? Object.values(feedback.options) : ['', ''],
-          };
-          setFormData(convertedFeedback as FormData);
+            options: feedback.options || ['', ''],
+          }));
         } catch (error) {
           toast.error(error.message || 'Error fetching survey.');
           navigate('/feedbacks');
@@ -61,7 +61,11 @@ export default function UpdateFeedback() {
     fetchFeedback();
   }, [id, navigate]);
 
-  const handleNext = () => setActiveStep((prevStep) => prevStep + 1);
+  const handleNext = () => {
+    if (validateStep()) {
+      setActiveStep((prevStep) => prevStep + 1);
+    }
+  };
   const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
 
   const handleChange = (field: keyof FormData, value: any) => {
@@ -111,8 +115,31 @@ export default function UpdateFeedback() {
     }
   };
 
+  const validateStep = () => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
+
+    if (activeStep === 0) {
+      if (!formData.name.trim()) {
+        newErrors.name = 'Name is required';
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      }
+    } else if (activeStep === 1) {
+      if (!formData.question.trim()) {
+        newErrors.question = 'Title is required';
+      }
+      if (!formData.description.trim()) {
+        newErrors.description = 'Description is required';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   return (
-    <Box sx={{ width: '80%', margin: 'auto', mt: 5 }}>
+    <Box sx={{ width: '80%', margin: 'auto', mt: 5 }} data-testid="update-feedback-page">
       <Stepper activeStep={activeStep}>
         {steps.map((label) => (
           <Step key={label}>
@@ -129,6 +156,8 @@ export default function UpdateFeedback() {
               fullWidth
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
+              error={!!errors.name}
+              helperText={errors.name}
             />
             <TextField
               label="Email"
@@ -136,6 +165,8 @@ export default function UpdateFeedback() {
               type="email"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
+              error={!!errors.email}
+              helperText={errors.email}
             />
           </Box>
         )}
@@ -147,6 +178,8 @@ export default function UpdateFeedback() {
               fullWidth
               value={formData.question}
               onChange={(e) => handleChange('question', e.target.value)}
+              error={!!errors.question}
+              helperText={errors.question}
             />
             <Typography variant="subtitle1">Description</Typography>
             <ReactQuill
@@ -238,16 +271,36 @@ export default function UpdateFeedback() {
           </Box>
         )}
 
-        <Box display="flex" justifyContent="space-between" mt={3}>
-          <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">
+        <div className="MuiBox-root css-16s7o2u"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '20px',
+          }}
+        >
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={activeStep === 0}
+          >
             Back
           </Button>
-          {activeStep < steps.length && (
-            <Button onClick={handleNext} variant="contained">
-              {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+          {activeStep === steps.length - 1 ? (
+            <Button
+              variant="contained"
+              onClick={handleSubmit}
+            >
+              Submit
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+            >
+              Next
             </Button>
           )}
-        </Box>
+        </div>
       </Box>
     </Box>
   );

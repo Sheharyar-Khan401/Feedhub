@@ -111,7 +111,11 @@ export default function SurveyVote() {
     }
   };
 
-  if (!survey) return <Typography>Loading...</Typography>;
+  if (!survey) return (
+    <Typography variant="h4" align="center" sx={{ mt: 5 }}>
+      Loading...
+    </Typography>
+  );
 
   return (
     <Box
