@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Stepper, Step, StepLabel, Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
 import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
-import { sendEmail } from '@/services/emailService';
-import { addFeedbackToDb } from '@/models/firebaseModel';
-import { useAuth } from '@/contexts/auth-context';
+import { useFeedback } from '../contexts/feedback-context';
+import { sendEmail } from '../services/emailService';
+import { generateLink } from '../utils/linkGenerator';
 
 interface FormData {
   name: string;
@@ -23,6 +23,8 @@ interface FormData {
 }
 
 export default function AddFeedback() {
+  const navigate = useNavigate();
+  const { addFeedback, error: contextError } = useFeedback();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -37,13 +39,47 @@ export default function AddFeedback() {
       step: 1,
     },
   });
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   const steps = ['Personal Information', 'Survey Details'];
 
-  const handleNext = () => setActiveStep((prevStep) => prevStep + 1);
+  useEffect(() => {
+    if (contextError) {
+      toast.error(contextError);
+    }
+  }, [contextError]);
+
+  const handleNext = () => {
+    if (validateStep()) {
+      setActiveStep((prevStep) => prevStep + 1);
+    }
+  };
   const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
+
+  const validateStep = () => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
+    
+    if (activeStep === 0) {
+      if (!formData.name.trim()) {
+        newErrors.name = 'Name is required';
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+    } else if (activeStep === 1) {
+      if (!formData.question.trim()) {
+        newErrors.question = 'Question is required';
+      }
+      if (formData.questionType === 'multiple-choice' && formData.options.some(opt => !opt.trim())) {
+        newErrors.options = 'All options must be filled';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (field: keyof FormData, value: any) => {
     setFormData((prevData) => ({ ...prevData, [field]: value }));
@@ -80,25 +116,24 @@ export default function AddFeedback() {
     }));
   };
 
-  const generateSurveyLink = async (surveyId: string) =>
-    `${window.location.origin}/survey/${surveyId}`;
-
   const handleSubmit = async () => {
     try {
-      if (!user) {
-        toast.error('You must be logged in to create feedback');
-        return;
-      }
-      const feedbackId = await addFeedbackToDb(formData, user.uid);
-      const surveyLink = await generateSurveyLink(feedbackId);
+      const feedbackId = await addFeedback(formData);
+      const feedbackLink = generateLink(feedbackId);
+      
+      // Send email with feedback link
+      const emailContent = `
+        <h2>Thank you for creating a feedback survey!</h2>
+        <p>Here's your link to share with others:</p>
+        <a href="${feedbackLink}" target="_blank">${feedbackLink}</a>
+        <p>You can use this link to collect feedback from your audience.</p>
+      `;
+      await sendEmail(formData.email, emailContent);
 
-      await sendEmail(formData.email, `Your survey link: ${surveyLink}`);
-
-      toast.success('Survey created and link sent!');
+      toast.success('Survey successfully created! An email with the survey link has been sent.');
       navigate('/feedbacks');
-    } catch (error) {
-      console.error('Error creating survey:', error);
-      toast.error('Error creating survey. Please try again.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error creating survey. Please try again.');
     }
   };
 
@@ -120,6 +155,8 @@ export default function AddFeedback() {
               fullWidth
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
+              error={!!errors.name}
+              helperText={errors.name}
             />
             <TextField
               label="Email"
@@ -127,6 +164,8 @@ export default function AddFeedback() {
               type="email"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
+              error={!!errors.email}
+              helperText={errors.email}
             />
           </Box>
         )}
@@ -138,6 +177,8 @@ export default function AddFeedback() {
               fullWidth
               value={formData.question}
               onChange={(e) => handleChange('question', e.target.value)}
+              error={!!errors.question}
+              helperText={errors.question}
             />
             <Typography variant="subtitle1">Description</Typography>
             <ReactQuill
@@ -167,6 +208,8 @@ export default function AddFeedback() {
                       fullWidth
                       value={option}
                       onChange={(e) => handleOptionChange(index, e.target.value)}
+                      error={!!errors.options}
+                      helperText={errors.options}
                     />
                     {formData.options.length > 2 && (
                       <Button

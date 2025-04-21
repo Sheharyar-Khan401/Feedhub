@@ -34,8 +34,7 @@ import { useNavigate } from 'react-router-dom';
 import { CSVLink } from 'react-csv';
 import { DashboardContent } from '../layouts/dashboard';
 import type { Feedback } from '../models/firebaseModel';
-import { deleteFeedbackFromDb, fetchFeedbacksFromDb } from '../models/firebaseModel';
-import { useAuth } from '../contexts/auth-context';
+import { useFeedback } from '../contexts/feedback-context';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -196,8 +195,7 @@ const FeedbackVisualization = ({ feedback }: { feedback: Feedback }) => {
 };
 
 export default function Feedbacks() {
-  const [createdFeedbacks, setCreatedFeedbacks] = useState<Feedback[]>([]);
-  const [votedFeedbacks, setVotedFeedbacks] = useState<Feedback[]>([]);
+  const { createdFeedbacks, votedFeedbacks, error: contextError, deleteFeedback } = useFeedback();
   const [activeTab, setActiveTab] = useState(0);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -212,30 +210,8 @@ export default function Feedbacks() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDetails, setSelectedDetails] = useState<Feedback | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
-  // useEffect to get feedback from Firebase
-  useEffect(() => {
-    const fetchFeedbacks = async () => {
-      try {
-        if (!user) {
-          toast.error('You must be logged in to view feedbacks');
-          navigate('/login');
-          return;
-        }
-        const { createdFeedbacks: fetchedCreated, votedFeedbacks: fetchedVoted } = await fetchFeedbacksFromDb(user.uid);
-        setCreatedFeedbacks(fetchedCreated);
-        setVotedFeedbacks(fetchedVoted);
-        setFilteredFeedbacks(fetchedCreated);
-      } catch (error) {
-        console.error('Error fetching feedbacks:', error);
-        toast.error('Error fetching feedbacks. Please try again.');
-      }
-    };
-
-    fetchFeedbacks();
-  }, [user, navigate]);
-
+  // Update filtered feedbacks when active tab or search term changes
   useEffect(() => {
     const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
     const filtered = currentFeedbacks.filter(
@@ -247,6 +223,7 @@ export default function Feedbacks() {
     setFilteredFeedbacks(filtered);
   }, [searchTerm, createdFeedbacks, votedFeedbacks, activeTab]);
 
+  // Update filtered feedbacks when date range changes
   useEffect(() => {
     const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
     const filtered = currentFeedbacks.filter((feedback) => {
@@ -261,6 +238,13 @@ export default function Feedbacks() {
     });
     setFilteredFeedbacks(filtered);
   }, [startDate, endDate, createdFeedbacks, votedFeedbacks, activeTab]);
+
+  // Handle errors from context
+  useEffect(() => {
+    if (contextError) {
+      toast.error(contextError);
+    }
+  }, [contextError]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -298,16 +282,12 @@ export default function Feedbacks() {
   };
 
   const handleDelete = async () => {
-    if (selectedFeedbackId && user) {
+    if (selectedFeedbackId) {
       try {
-        await deleteFeedbackFromDb(selectedFeedbackId, user.uid);
-        setFilteredFeedbacks((prevFeedbacks) =>
-          prevFeedbacks.filter((feedback) => feedback.id !== selectedFeedbackId)
-        );
+        await deleteFeedback(selectedFeedbackId);
         toast.success('Feedback successfully deleted!');
-      } catch (error: any) {
-        console.error('Error deleting feedback:', error);
-        toast.error(error.message || 'Error deleting feedback. Please try again.');
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Error deleting feedback. Please try again.');
       } finally {
         setIsDeleteModalOpen(false);
         setSelectedFeedbackId(null);

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { fetchFeedbackFromDb, updateFeedbackInDb } from '../models/firebaseModel';
+import { useFeedback } from '../contexts/feedback-context';
 
 interface FormData {
   name: string;
@@ -23,6 +23,7 @@ interface FormData {
 export default function UpdateFeedback() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { updateFeedback, getFeedback, error: contextError } = useFeedback();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -45,21 +46,27 @@ export default function UpdateFeedback() {
     const fetchFeedback = async () => {
       if (id) {
         try {
-          const feedback = await fetchFeedbackFromDb(id);
+          const feedback = await getFeedback(id);
           setFormData(prevData => ({
             ...prevData,
             ...feedback,
             options: feedback.options || ['', ''],
           }));
-        } catch (error) {
-          toast.error(error.message || 'Error fetching survey.');
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : 'Error fetching survey.');
           navigate('/feedbacks');
         }
       }
     };
 
     fetchFeedback();
-  }, [id, navigate]);
+  }, [id, navigate, getFeedback]);
+
+  useEffect(() => {
+    if (contextError) {
+      toast.error(contextError);
+    }
+  }, [contextError]);
 
   const handleNext = () => {
     if (validateStep()) {
@@ -106,11 +113,11 @@ export default function UpdateFeedback() {
   const handleSubmit = async () => {
     if (id) {
       try {
-        await updateFeedbackInDb(id, formData);
+        await updateFeedback(id, formData);
         toast.success('Survey successfully updated!');
         navigate('/feedbacks');
-      } catch (error) {
-        toast.error(error.message || 'Error updating survey. Please try again.');
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Error updating survey. Please try again.');
       }
     }
   };
