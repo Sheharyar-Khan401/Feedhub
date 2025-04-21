@@ -752,7 +752,7 @@ export default function Feedbacks() {
           </Typography>
           
           {/* Visualization Section */}
-          {selectedDetails && (
+          {selectedDetails && selectedDetails.questionType !== 'text' && (
             <Box sx={{ 
               height: { xs: 200, sm: 250, md: 300 },
               mb: { xs: 2, sm: 3 },
