@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadingButton } from '@mui/lab';
 import { Box, IconButton, InputAdornment, Link, Stack, TextField, Alert } from '@mui/material';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -10,6 +10,7 @@ import { Iconify } from '../iconify';
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,16 @@ export function LoginForm() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/feedbacks');
+      
+      // Check if we have a survey ID in the state
+      const state = location.state as { surveyId?: string };
+      if (state?.surveyId) {
+        // Redirect to the survey route
+        navigate(`/survey/${state.surveyId}`);
+      } else {
+        // Default redirect to feedbacks page
+        navigate('/feedbacks');
+      }
     } catch (err: any) {
       console.error('Login failed:', err);
       setError(
