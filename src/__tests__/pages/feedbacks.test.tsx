@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Feedbacks from '../../pages/feedbacks';
+import { FeedbackProvider } from '../../contexts/feedback-context';
 
 // Mock Firebase
 jest.mock('../../firebase', () => ({
@@ -26,7 +27,9 @@ jest.mock('react-router-dom', () => ({
 describe('Feedbacks Page', () => {
   const renderFeedbacks = () => render(
     <BrowserRouter>
-      <Feedbacks />
+      <FeedbackProvider>
+        <Feedbacks />
+      </FeedbackProvider>
     </BrowserRouter>
   );
 

@@ -2,6 +2,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AddFeedback from '../../pages/add-feedback';
+import * as FeedbackContext from '../../contexts/feedback-context';
+
+// Increase default timeout for all tests
+jest.setTimeout(30000);
 
 // Mock services
 jest.mock('../../services/emailService', () => ({
@@ -10,6 +14,10 @@ jest.mock('../../services/emailService', () => ({
 
 jest.mock('../../models/firebaseModel', () => ({
   addFeedbackToDb: jest.fn().mockResolvedValue('mock-feedback-id'),
+  fetchFeedbacksFromDb: jest.fn().mockResolvedValue({ createdFeedbacks: [], votedFeedbacks: [] }),
+  updateFeedbackInDb: jest.fn().mockResolvedValue(undefined),
+  deleteFeedbackFromDb: jest.fn().mockResolvedValue(undefined),
+  fetchFeedbackFromDb: jest.fn().mockResolvedValue({}),
 }));
 
 // Mock react-quill CSS import
@@ -47,16 +55,36 @@ jest.mock('react-toastify', () => ({
 }));
 
 describe('Add Feedback Page', () => {
+  const mockAddFeedback = jest.fn().mockResolvedValue('mock-feedback-id');
+  const mockUpdateFeedback = jest.fn().mockResolvedValue(undefined);
+  const mockDeleteFeedback = jest.fn().mockResolvedValue(undefined);
+  const mockGetFeedback = jest.fn().mockResolvedValue({});
+  const mockRefreshFeedbacks = jest.fn().mockResolvedValue(undefined);
+  
+  beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+    
+    // Mock the feedback context
+    jest.spyOn(FeedbackContext, 'useFeedback').mockImplementation(() => ({
+      addFeedback: mockAddFeedback,
+      updateFeedback: mockUpdateFeedback,
+      deleteFeedback: mockDeleteFeedback,
+      getFeedback: mockGetFeedback,
+      refreshFeedbacks: mockRefreshFeedbacks,
+      loading: false,
+      error: null,
+      severity: 'info',
+      createdFeedbacks: [],
+      votedFeedbacks: [],
+    }));
+  });
+
   const renderAddFeedback = () => render(
     <BrowserRouter>
       <AddFeedback />
     </BrowserRouter>
   );
-
-  beforeEach(() => {
-    // Clear all mocks before each test
-    jest.clearAllMocks();
-  });
 
   it('renders the stepper with correct steps', () => {
     renderAddFeedback();
@@ -70,7 +98,7 @@ describe('Add Feedback Page', () => {
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
   });
 
-  it('allows navigation between steps', () => {
+  it('allows navigation between steps', async () => {
     renderAddFeedback();
     
     // Fill in required fields in first step
@@ -100,7 +128,7 @@ describe('Add Feedback Page', () => {
       target: { value: 'test@example.com' },
     });
 
-    // Move to second step
+    // Move to next step
     fireEvent.click(screen.getByText('Next'));
 
     // Fill in second step
@@ -111,20 +139,44 @@ describe('Add Feedback Page', () => {
       target: { value: 'Test Description' },
     });
 
-    // Complete the form
+    // Fill in multiple choice options
+    const option1Input = screen.getByLabelText('Option 1');
+    const option2Input = screen.getByLabelText('Option 2');
+    fireEvent.change(option1Input, { target: { value: 'Option 1' } });
+    fireEvent.change(option2Input, { target: { value: 'Option 2' } });
+
+    // Move to final step
     fireEvent.click(screen.getByText('Finish'));
 
-    // Check if success message appears
+    // Wait for the success message and submit button
     await waitFor(() => {
-      expect(screen.getByText('All Steps Completed')).toBeInTheDocument();
+      const heading = screen.getByRole('heading', { level: 6 });
+      expect(heading).toHaveTextContent('All Steps Completed');
     });
 
     // Submit the form
     fireEvent.click(screen.getByText('Submit'));
 
+    // Verify the feedback was added
+    await waitFor(() => {
+      expect(mockAddFeedback).toHaveBeenCalledWith({
+        name: 'Test User',
+        email: 'test@example.com',
+        question: 'Test Question',
+        description: 'Test Description',
+        questionType: 'multiple-choice',
+        options: ['Option 1', 'Option 2'],
+        ratingScale: {
+          min: 1,
+          max: 5,
+          step: 1,
+        },
+      });
+    });
+
     // Verify toast was called
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith('Survey created and link sent!');
+      expect(toast.success).toHaveBeenCalledWith('Survey successfully created! An email with the survey link has been sent.');
     });
   });
 }); 

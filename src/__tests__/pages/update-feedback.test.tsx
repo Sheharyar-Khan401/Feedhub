@@ -1,6 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import UpdateFeedback from '../../pages/update-feedback';
+import { FeedbackProvider } from '../../contexts/feedback-context';
 
 // Mock useParams
 jest.mock('react-router-dom', () => ({
@@ -34,37 +35,52 @@ jest.mock('react-quill', () => ({
   default: () => <div data-testid="quill-editor" />,
 }));
 
+// Mock auth context
+jest.mock('../../contexts/auth-context', () => ({
+  useAuth: () => ({
+    user: { uid: 'test-user-id' }
+  })
+}));
+
 describe('Update Feedback Page', () => {
   const renderUpdateFeedback = () => render(
     <BrowserRouter>
-      <UpdateFeedback />
+      <FeedbackProvider>
+        <UpdateFeedback />
+      </FeedbackProvider>
     </BrowserRouter>
   );
 
   const moveToSurveyDetails = async () => {
-    // Fill in personal information
-    fireEvent.change(screen.getByLabelText('Name'), {
-      target: { value: 'Test User' },
+    await act(async () => {
+      // Fill in personal information
+      fireEvent.change(screen.getByLabelText('Name'), {
+        target: { value: 'Test User' },
+      });
+      fireEvent.change(screen.getByLabelText('Email'), {
+        target: { value: 'test@example.com' },
+      });
+      
+      // Move to next step
+      fireEvent.click(screen.getByText('Next'));
     });
-    fireEvent.change(screen.getByLabelText('Email'), {
-      target: { value: 'test@example.com' },
-    });
-    
-    // Move to next step
-    fireEvent.click(screen.getByText('Next'));
     
     await waitFor(() => {
       expect(screen.getByText('Survey Details')).toBeInTheDocument();
     });
   };
 
-  it('renders without crashing', () => {
-    renderUpdateFeedback();
+  it('renders without crashing', async () => {
+    await act(async () => {
+      renderUpdateFeedback();
+    });
     expect(screen.getByTestId('update-feedback-page')).toBeInTheDocument();
   });
 
   it('displays the update feedback form with existing data', async () => {
-    renderUpdateFeedback();
+    await act(async () => {
+      renderUpdateFeedback();
+    });
     
     // Wait for personal information to load
     await waitFor(() => {
@@ -83,30 +99,57 @@ describe('Update Feedback Page', () => {
   });
 
   it('validates required fields', async () => {
-    renderUpdateFeedback();
+    await act(async () => {
+      renderUpdateFeedback();
+    });
+    
+    // Clear the form fields
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Name'), {
+        target: { value: '' },
+      });
+      fireEvent.change(screen.getByLabelText('Email'), {
+        target: { value: '' },
+      });
+    });
     
     // Try to move to next step without filling required fields
-    fireEvent.click(screen.getByText('Next'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Next'));
+    });
 
+    // Wait for error messages to appear
     await waitFor(() => {
+      const nameInput = screen.getByLabelText('Name');
+      const emailInput = screen.getByLabelText('Email');
+      
+      // Check if the inputs have error state
+      expect(nameInput).toHaveAttribute('aria-invalid', 'true');
+      expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+      
+      // Check for error messages
       expect(screen.getByText('Name is required')).toBeInTheDocument();
       expect(screen.getByText('Email is required')).toBeInTheDocument();
     });
   });
 
   it('updates the feedback with new data', async () => {
-    renderUpdateFeedback();
+    await act(async () => {
+      renderUpdateFeedback();
+    });
     
     // Fill in personal information and move to survey details
     await moveToSurveyDetails();
 
     // Update survey details
-    fireEvent.change(screen.getByLabelText('Survey Question'), {
-      target: { value: 'Updated Feedback' },
-    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Survey Question'), {
+        target: { value: 'Updated Feedback' },
+      });
 
-    // Submit the form
-    fireEvent.click(screen.getByText('Submit'));
+      // Submit the form
+      fireEvent.click(screen.getByText('Submit'));
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Survey Details')).toBeInTheDocument();

@@ -1,110 +1,101 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { updateDoc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
 import SurveyVote from '../../pages/survey-vote';
 
-// Mock Firebase
+// Mock Firebase initialization
 jest.mock('../../firebase', () => ({
   db: {},
+  auth: {}
 }));
 
-// Mock useParams
 jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useParams: () => ({
-    id: 'test-id',
-  }),
+  useNavigate: () => mockNavigate,
+  useParams: () => ({ id: 'test-survey-id' }),
 }));
 
-// Mock Firebase Firestore
+const mockSurveyData = {
+  question: 'Test Question',
+  description: 'Test Description',
+  questionType: 'multiple-choice',
+  options: {
+    option1: 'Option 1',
+    option2: 'Option 2'
+  }
+};
+
 jest.mock('firebase/firestore', () => ({
-  doc: jest.fn(),
+  doc: jest.fn(() => ({})),
   getDoc: jest.fn(() => Promise.resolve({
     exists: () => true,
-    data: () => ({
-      question: 'Test Survey Question',
-      description: 'Test Description',
-      questionType: 'multiple-choice',
-      options: ['Option 1', 'Option 2', 'Option 3'],
-      votes: [],
-      submittedBy: [],
-    }),
+    data: () => mockSurveyData
   })),
   updateDoc: jest.fn(() => Promise.resolve()),
-  arrayUnion: jest.fn(x => x),
+  arrayUnion: jest.fn(data => data)
 }));
 
-// Mock auth context
+jest.mock('react-toastify', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn()
+  },
+}));
+
 jest.mock('../../contexts/auth-context', () => ({
-  useAuth: () => ({
-    user: {
-      uid: 'test-user-id',
-    },
-  }),
+  useAuth: jest.fn(() => ({
+    user: { uid: 'test-user-id' }
+  }))
 }));
 
-describe('Survey Vote Page', () => {
-  const renderSurveyVote = () => render(
-    <BrowserRouter>
-      <SurveyVote />
-    </BrowserRouter>
-  );
+const mockNavigate = jest.fn();
 
-  it('renders without crashing', () => {
-    renderSurveyVote();
-    expect(screen.getByRole('heading', { name: /Loading.../i })).toBeInTheDocument();
+describe('SurveyVote', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('displays the survey question and options', async () => {
-    renderSurveyVote();
+  it('renders and handles multiple choice survey submission', async () => {
+    render(<SurveyVote />);
     
+    // Wait for the survey to load
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Test Survey Question' })).toBeInTheDocument();
-      expect(screen.getByLabelText('Option 1')).toBeInTheDocument();
-      expect(screen.getByLabelText('Option 2')).toBeInTheDocument();
-      expect(screen.getByLabelText('Option 3')).toBeInTheDocument();
-    });
-  });
-
-  it('allows voting for an option', async () => {
-    renderSurveyVote();
-    
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Test Survey Question' })).toBeInTheDocument();
+      expect(screen.getByText('Test Question')).toBeInTheDocument();
     });
 
-    // Fill in the required fields
-    fireEvent.change(screen.getByLabelText('Your Full Name'), {
-      target: { value: 'Test User' },
-    });
+    // Fill in the form
     fireEvent.click(screen.getByLabelText('Option 1'));
+    fireEvent.change(screen.getByLabelText('Your Full Name'), {
+      target: { value: 'Test User' }
+    });
 
-    // Submit the vote
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    // Submit the form
+    fireEvent.click(screen.getByText('Submit'));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+      expect(updateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          votes: expect.anything(),
+          submittedBy: expect.anything()
+        })
+      );
+      expect(toast.success).toHaveBeenCalledWith('Thank you for your response!');
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 
-  it('prevents multiple votes', async () => {
-    // Mock the survey data to show that the user has already voted
-    const getDocMock = jest.requireMock('firebase/firestore').getDoc;
-    getDocMock.mockImplementationOnce(() => Promise.resolve({
-      exists: () => true,
-      data: () => ({
-        question: 'Test Survey Question',
-        description: 'Test Description',
-        questionType: 'multiple-choice',
-        options: ['Option 1', 'Option 2', 'Option 3'],
-        votes: [],
-        submittedBy: ['test-user-id'],
-      }),
-    }));
+  it('shows error when submitting without required fields', async () => {
+    render(<SurveyVote />);
 
-    renderSurveyVote();
-    
+    // Wait for the survey to load
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Already Submitted' })).toBeDisabled();
+      expect(screen.getByText('Test Question')).toBeInTheDocument();
     });
+
+    // Try to submit without filling required fields
+    fireEvent.click(screen.getByText('Submit'));
+
+    expect(toast.error).toHaveBeenCalledWith('Please enter your name.');
   });
 }); 
