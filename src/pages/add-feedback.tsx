@@ -118,17 +118,22 @@ export default function AddFeedback() {
 
   const handleSubmit = async () => {
     try {
+      console.log("Submit handler");
+      
       const feedbackId = await addFeedback(formData);
       const feedbackLink = generateLink(feedbackId);
+      
       
       // Send email with feedback link
       const emailContent = `
         <h2>Thank you for creating a feedback survey!</h2>
-        <p>Here's your link to share with others:</p>
+        <p>Here's your link for survey:</p>
         <a href="${feedbackLink}" target="_blank">${feedbackLink}</a>
-        <p>You can use this link to collect feedback from your audience.</p>
+        <p>You can use this link.</p>
       `;
-      await sendEmail(formData.email, emailContent);
+      console.log("Email Content");
+      
+      await sendEmail(formData.email, formData.name , emailContent);
 
       toast.success('Survey successfully created! An email with the survey link has been sent.');
       navigate('/feedbacks');

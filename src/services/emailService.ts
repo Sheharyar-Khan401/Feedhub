@@ -1,9 +1,10 @@
 import emailjs from 'emailjs-com';
 
-export const sendEmail = async (to: string, content: string) => {
+export const sendEmail = async (to: string, toName: string, content: string) => {
   try {
     const templateParams = {
       to_email: to, // User's email address
+      to_name: toName, // User's name
       subject: 'Your Survey Link', // Email subject
       message: content, // Message with survey link
     };
