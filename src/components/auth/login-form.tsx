@@ -108,7 +108,16 @@ export function LoginForm() {
           </LoadingButton>
 
           <Box sx={{ textAlign: 'center' }}>
-            <Link variant="subtitle2" href="/register" underline="hover">
+            <Link 
+              variant="subtitle2" 
+              href="/register" 
+              underline="hover"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/register', { state: location.state });
+              }}
+              sx={{ cursor: 'pointer' }}
+            >
               Don&apos;t have an account? Sign up
             </Link>
           </Box>

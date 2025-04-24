@@ -195,7 +195,7 @@ const FeedbackVisualization = ({ feedback }: { feedback: Feedback }) => {
 };
 
 export default function Feedbacks() {
-  const { createdFeedbacks, votedFeedbacks, error: contextError, deleteFeedback } = useFeedback();
+  const { createdFeedbacks, votedFeedbacks, error: contextError, deleteFeedback, refreshFeedbacks } = useFeedback();
   const [activeTab, setActiveTab] = useState(0);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -248,7 +248,7 @@ export default function Feedbacks() {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-    setFilteredFeedbacks(newValue === 0 ? createdFeedbacks : votedFeedbacks);
+    refreshFeedbacks();
     setPage(0);
   };
 
