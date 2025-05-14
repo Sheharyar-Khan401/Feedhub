@@ -22,6 +22,18 @@ interface FormData {
   };
 }
 
+interface FormErrors {
+  name?: string;
+  email?: string;
+  question?: string;
+  options?: string[];
+  ratingScale?: {
+    min?: string;
+    max?: string;
+    step?: string;
+  };
+}
+
 export default function AddFeedback() {
   const navigate = useNavigate();
   const { addFeedback, error: contextError } = useFeedback();
@@ -39,7 +51,7 @@ export default function AddFeedback() {
       step: 1,
     },
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const steps = ['Personal Information', 'Survey Details'];
 
@@ -57,7 +69,7 @@ export default function AddFeedback() {
   const handleBack = () => setActiveStep((prevStep) => prevStep - 1);
 
   const validateStep = () => {
-    const newErrors: Partial<Record<keyof FormData, string>> = {};
+    const newErrors: FormErrors = {};
     
     if (activeStep === 0) {
       if (!formData.name.trim()) {
@@ -72,8 +84,41 @@ export default function AddFeedback() {
       if (!formData.question.trim()) {
         newErrors.question = 'Question is required';
       }
-      if (formData.questionType === 'multiple-choice' && formData.options.some(opt => !opt.trim())) {
-        newErrors.options = 'All options must be filled';
+      if (formData.questionType === 'multiple-choice') {
+        const optionErrors = formData.options.map(opt => !opt.trim() ? 'Option is required' : '');
+        if (optionErrors.some(error => error)) {
+          newErrors.options = optionErrors;
+        }
+      } else if (formData.questionType === 'rating') {
+        const { min, max, step } = formData.ratingScale;
+        const ratingErrors: FormErrors['ratingScale'] = {};
+        let hasErrors = false;
+        
+        if (min <= 0) {
+          ratingErrors.min = 'Minimum value must be greater than 0';
+          hasErrors = true;
+        }
+        if (max <= 0) {
+          ratingErrors.max = 'Maximum value must be greater than 0';
+          hasErrors = true;
+        }
+        if (step <= 0) {
+          ratingErrors.step = 'Step value must be greater than 0';
+          hasErrors = true;
+        }
+        if (min >= max) {
+          ratingErrors.min = 'Minimum value must be less than maximum value';
+          ratingErrors.max = 'Maximum value must be greater than minimum value';
+          hasErrors = true;
+        }
+        if (step > (max - min)) {
+          ratingErrors.step = 'Step value must be less than the range (max - min)';
+          hasErrors = true;
+        }
+
+        if (hasErrors) {
+          newErrors.ratingScale = ratingErrors;
+        }
       }
     }
 
@@ -123,17 +168,29 @@ export default function AddFeedback() {
       const feedbackId = await addFeedback(formData);
       const feedbackLink = generateLink(feedbackId);
       
-      
       // Send email with feedback link
       const emailContent = `
-        <h2>Thank you for creating a feedback survey!</h2>
-        <p>Here's your link for survey:</p>
-        <a href="${feedbackLink}" target="_blank">${feedbackLink}</a>
-        <p>You can use this link.</p>
+        Dear ${formData.name},
+
+        Thank you for creating a feedback survey with Feedhub!
+
+        Your survey is now ready. You can access it using the following link:
+        ${feedbackLink}
+
+        Important notes:
+        - This link is unique to your survey
+        - Keep this link secure as it provides access to your survey
+        - You can share this link with your respondents
+
+        If you have any questions or need assistance, please don't hesitate to contact us.
+
+        Best regards,
+        The Feedhub Team
       `;
+      
       console.log("Email Content");
       
-      await sendEmail(formData.email, formData.name , emailContent);
+      await sendEmail(formData.email, formData.name, emailContent);
 
       toast.success('Survey successfully created! An email with the survey link has been sent.');
       navigate('/feedbacks');
@@ -213,8 +270,8 @@ export default function AddFeedback() {
                       fullWidth
                       value={option}
                       onChange={(e) => handleOptionChange(index, e.target.value)}
-                      error={!!errors.options}
-                      helperText={errors.options}
+                      error={!!errors.options?.[index]}
+                      helperText={errors.options?.[index]}
                     />
                     {formData.options.length > 2 && (
                       <Button
@@ -247,18 +304,24 @@ export default function AddFeedback() {
                     type="number"
                     value={formData.ratingScale.min}
                     onChange={(e) => handleRatingScaleChange('min', Number(e.target.value))}
+                    error={!!errors.ratingScale?.min}
+                    helperText={errors.ratingScale?.min}
                   />
                   <TextField
                     label="Max"
                     type="number"
                     value={formData.ratingScale.max}
                     onChange={(e) => handleRatingScaleChange('max', Number(e.target.value))}
+                    error={!!errors.ratingScale?.max}
+                    helperText={errors.ratingScale?.max}
                   />
                   <TextField
                     label="Step"
                     type="number"
                     value={formData.ratingScale.step}
                     onChange={(e) => handleRatingScaleChange('step', Number(e.target.value))}
+                    error={!!errors.ratingScale?.step}
+                    helperText={errors.ratingScale?.step}
                   />
                 </Box>
               </Box>
@@ -277,13 +340,13 @@ export default function AddFeedback() {
           </Box>
         )}
 
-        <Box display="flex" justifyContent="space-between" mt={3}>
+        <Box display="flex" justifyContent="space-between" my={3}>
           <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">
             Back
           </Button>
           {activeStep < steps.length && (
             <Button onClick={handleNext} variant="contained">
-              {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+              Next
             </Button>
           )}
         </Box>
