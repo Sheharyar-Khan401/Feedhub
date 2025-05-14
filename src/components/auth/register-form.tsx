@@ -53,7 +53,9 @@ export function RegisterForm() {
       setError(
         err.code === 'auth/email-already-in-use'
           ? 'This email is already registered. Please try logging in instead.'
-          : 'Registration failed. Please try again.'
+          : err.code === 'auth/weak-password'
+            ? 'Password must be at least 6 characters long'
+            : 'Registration failed. Please try again.'
       );
     } finally {
       setLoading(false);
