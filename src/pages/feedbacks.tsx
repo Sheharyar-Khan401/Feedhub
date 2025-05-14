@@ -645,35 +645,39 @@ export default function Feedbacks() {
                             <Typography sx={{ fontSize: '0.75rem' }}>Votes</Typography>
                           </Button>
                         </Tooltip>
-                        <Tooltip title="Update Feedback">
-                          <Button 
-                            variant="outlined" 
-                            size="small"
-                            onClick={() => navigate(`/update-feedback/${feedback.id}`)}
-                            sx={{ 
-                              minWidth: 'auto',
-                              px: 1,
-                              py: 0.5
-                            }}
-                          >
-                            <Typography sx={{ fontSize: '0.75rem' }}>Update</Typography>
-                          </Button>
-                        </Tooltip>
-                        <Tooltip title="Delete Feedback">
-                          <Button 
-                            variant="outlined" 
-                            color="error"
-                            size="small"
-                            onClick={() => openDeleteModal(feedback.id)}
-                            sx={{ 
-                              minWidth: 'auto',
-                              px: 1,
-                              py: 0.5
-                            }}
-                          >
-                            <Typography sx={{ fontSize: '0.75rem' }}>Delete</Typography>
-                          </Button>
-                        </Tooltip>
+                        {activeTab === 0 && (
+                          <>
+                            <Tooltip title="Update Feedback">
+                              <Button 
+                                variant="outlined" 
+                                size="small"
+                                onClick={() => navigate(`/update-feedback/${feedback.id}`)}
+                                sx={{ 
+                                  minWidth: 'auto',
+                                  px: 1,
+                                  py: 0.5
+                                }}
+                              >
+                                <Typography sx={{ fontSize: '0.75rem' }}>Update</Typography>
+                              </Button>
+                            </Tooltip>
+                            <Tooltip title="Delete Feedback">
+                              <Button 
+                                variant="outlined" 
+                                color="error"
+                                size="small"
+                                onClick={() => openDeleteModal(feedback.id)}
+                                sx={{ 
+                                  minWidth: 'auto',
+                                  px: 1,
+                                  py: 0.5
+                                }}
+                              >
+                                <Typography sx={{ fontSize: '0.75rem' }}>Delete</Typography>
+                              </Button>
+                            </Tooltip>
+                          </>
+                        )}
                       </Box>
                     </TableCell>
                   </TableRow>
