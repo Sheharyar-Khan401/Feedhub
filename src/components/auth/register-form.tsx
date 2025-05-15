@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadingButton } from '@mui/lab';
 import { Box, IconButton, InputAdornment, Link, Stack, TextField, Alert } from '@mui/material';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { Iconify } from '../iconify';
@@ -31,12 +31,19 @@ export function RegisterForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Update user's display name
+      await updateProfile(user, {
+        displayName: fullName
+      });
+
       // Create user document in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+      const userRef = doc(db, 'users', user.uid);
+      const userData = {
         fullName,
         email,
         createdAt: new Date(),
-      });
+      };
+      await setDoc(userRef, userData);
 
       // Check if we have a survey ID in the state
       const state = location.state as { surveyId?: string };

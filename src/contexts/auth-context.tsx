@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { User, signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { User, signOut, updateProfile } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
 type AuthContextType = {
   user: User | null;
@@ -19,8 +20,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((authUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       setUser(authUser);
+      
+      if (authUser && !authUser.displayName) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', authUser.uid));
+          if (userDoc.exists()) {
+            await updateProfile(authUser, {
+              displayName: userDoc.data().fullName
+            });
+          }
+        } catch (error) {
+          console.error('Error updating profile:', error);
+        }
+      }
+      
       setLoading(false);
     });
 
