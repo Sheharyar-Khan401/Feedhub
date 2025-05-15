@@ -321,16 +321,26 @@ export default function Feedbacks() {
     { label: 'Question', key: 'question' },
     { label: 'Description', key: 'description' },
     { label: 'Question Type', key: 'questionType' },
-    { label: 'Option 1', key: 'options.option1' },
-    { label: 'Option 2', key: 'options.option2' },
-    { label: 'Option 3', key: 'options.option3' },
-    { label: 'Option 4', key: 'options.option4' },
+    { label: 'Options', key: 'options' },
     { label: 'Rating Min', key: 'ratingScale.min' },
     { label: 'Rating Max', key: 'ratingScale.max' },
     { label: 'Rating Step', key: 'ratingScale.step' },
     { label: 'Created At', key: 'createdAt' },
     { label: 'Updated At', key: 'updatedAt' },
   ];
+
+  // Prepare data for CSV export
+  const csvData = filteredFeedbacks.map(feedback => ({
+    ...feedback,
+    description: stripHtml(feedback.description),
+    options: feedback.questionType === 'multiple-choice' 
+      ? (Array.isArray(feedback.options) 
+          ? feedback.options.join(', ')
+          : feedback.options ? Object.values(feedback.options as Record<string, string>).join(', ') : '')
+      : '',
+    createdAt: feedback.createdAt?.toDate().toLocaleString() || '',
+    updatedAt: feedback.updatedAt?.toDate().toLocaleString() || '',
+  }));
 
   const paginatedFeedbacks = filteredFeedbacks.slice(
     page * rowsPerPage,
@@ -388,7 +398,7 @@ export default function Feedbacks() {
           </Grid>
           <Grid xs={12} md={2}>
             <CSVLink
-              data={filteredFeedbacks}
+              data={csvData}
               headers={csvHeaders}
               filename="feedbacks.csv"
               className="btn btn-primary"
@@ -468,220 +478,230 @@ export default function Feedbacks() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedFeedbacks.map((feedback) => (
-                  <TableRow 
-                    key={feedback.id}
-                    sx={{ 
-                      '&:hover': { 
-                        backgroundColor: 'action.hover',
-                      },
-                      '& td': { 
-                        padding: '12px 16px',
-                        fontSize: '0.875rem',
-                        borderBottom: '1px solid',
-                        borderColor: 'divider'
-                      }
-                    }}
-                  >
-                    <TableCell>
-                      <Tooltip title={feedback.name} placement="top">
-                        <Typography
-                          sx={{
-                            maxWidth: 150,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {feedback.name}
-                        </Typography>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip title={feedback.email} placement="top">
-                        <Typography
-                          sx={{
-                            maxWidth: 200,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {feedback.email}
-                        </Typography>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 400 }}>
-                      <Tooltip title={feedback.question} placement="top">
-                        <Typography
-                          sx={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            lineHeight: 1.4,
-                            minWidth: 200,
-                            maxWidth: 400,
-                          }}
-                        >
-                          {feedback.question}
-                        </Typography>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 400 }}>
-                      <Tooltip title={stripHtml(feedback.description)} placement="top">
-                        <Box
-                          dangerouslySetInnerHTML={{ __html: feedback.description }}
-                          sx={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            lineHeight: 1.4,
-                            '& p': {
-                              margin: 0,
-                            },
-                            minWidth: 200,
-                            maxWidth: 400,
-                          }}
-                        />
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      {feedback.questionType ? (
-                        <Chip 
-                          label={feedback.questionType}
-                          size="small"
-                          color={
-                            feedback.questionType === 'multiple-choice' ? 'primary' :
-                            feedback.questionType === 'rating' ? 'secondary' :
-                            feedback.questionType === 'text' ? 'info' : 'default'
-                          }
-                          sx={{ 
-                            textTransform: 'capitalize',
-                            fontWeight: 500
-                          }}
-                        />
-                      ) : "-"}
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 200 }}>
-                      {feedback.questionType === 'multiple-choice' && (
-                        <Box>
-                          {feedback.options ? (
-                            Array.isArray(feedback.options) ? (
-                              feedback.options.map((option: string, index: number) => (
-                                <Tooltip key={index} title={option} placement="top">
-                                  <Typography 
-                                    sx={{ 
-                                      fontSize: '0.875rem',
-                                      display: '-webkit-box',
-                                      WebkitLineClamp: 1,
-                                      WebkitBoxOrient: 'vertical',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                    }}
-                                  >
-                                    {option}
-                                  </Typography>
-                                </Tooltip>
-                              ))
-                            ) : (
-                              Object.values(feedback.options as Record<string, string>).map((option: string, index: number) => (
-                                <Tooltip key={index} title={option} placement="top">
-                                  <Typography 
-                                    sx={{ 
-                                      fontSize: '0.875rem',
-                                      display: '-webkit-box',
-                                      WebkitLineClamp: 1,
-                                      WebkitBoxOrient: 'vertical',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                    }}
-                                  >
-                                    {option}
-                                  </Typography>
-                                </Tooltip>
-                              ))
-                            )
-                          ) : null}
-                        </Box>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {feedback.questionType === 'rating' && (
-                        <Box>
-                          <Typography sx={{ fontSize: '0.875rem' }}>
-                            {feedback.ratingScale?.min} - {feedback.ratingScale?.max}
-                          </Typography>
-                          <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
-                            Step: {feedback.ratingScale?.step}
-                          </Typography>
-                        </Box>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={feedback.votes?.length || 0}
-                        size="small"
-                        color="default"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="View Votes">
-                          <Button 
-                            variant="outlined" 
-                            size="small"
-                            onClick={() => openDetailsModal(feedback)}
-                            sx={{ 
-                              minWidth: 'auto',
-                              px: 1,
-                              py: 0.5
-                            }}
-                          >
-                            <Typography sx={{ fontSize: '0.75rem' }}>Votes</Typography>
-                          </Button>
-                        </Tooltip>
-                        {activeTab === 0 && (
-                          <>
-                            <Tooltip title="Update Feedback">
-                              <Button 
-                                variant="outlined" 
-                                size="small"
-                                onClick={() => navigate(`/update-feedback/${feedback.id}`)}
-                                sx={{ 
-                                  minWidth: 'auto',
-                                  px: 1,
-                                  py: 0.5
-                                }}
-                              >
-                                <Typography sx={{ fontSize: '0.75rem' }}>Update</Typography>
-                              </Button>
-                            </Tooltip>
-                            <Tooltip title="Delete Feedback">
-                              <Button 
-                                variant="outlined" 
-                                color="error"
-                                size="small"
-                                onClick={() => openDeleteModal(feedback.id)}
-                                sx={{ 
-                                  minWidth: 'auto',
-                                  px: 1,
-                                  py: 0.5
-                                }}
-                              >
-                                <Typography sx={{ fontSize: '0.75rem' }}>Delete</Typography>
-                              </Button>
-                            </Tooltip>
-                          </>
-                        )}
-                      </Box>
+                {paginatedFeedbacks.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                      <Typography variant="body1" color="text.secondary">
+                        No results found
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  paginatedFeedbacks.map((feedback) => (
+                    <TableRow 
+                      key={feedback.id}
+                      sx={{ 
+                        '&:hover': { 
+                          backgroundColor: 'action.hover',
+                        },
+                        '& td': { 
+                          padding: '12px 16px',
+                          fontSize: '0.875rem',
+                          borderBottom: '1px solid',
+                          borderColor: 'divider'
+                        }
+                      }}
+                    >
+                      <TableCell>
+                        <Tooltip title={feedback.name} placement="top">
+                          <Typography
+                            sx={{
+                              maxWidth: 150,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {feedback.name}
+                          </Typography>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title={feedback.email} placement="top">
+                          <Typography
+                            sx={{
+                              maxWidth: 200,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {feedback.email}
+                          </Typography>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 400 }}>
+                        <Tooltip title={feedback.question} placement="top">
+                          <Typography
+                            sx={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              lineHeight: 1.4,
+                              minWidth: 200,
+                              maxWidth: 400,
+                            }}
+                          >
+                            {feedback.question}
+                          </Typography>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 400 }}>
+                        <Tooltip title={stripHtml(feedback.description)} placement="top">
+                          <Box
+                            dangerouslySetInnerHTML={{ __html: feedback.description }}
+                            sx={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              lineHeight: 1.4,
+                              '& p': {
+                                margin: 0,
+                              },
+                              minWidth: 200,
+                              maxWidth: 400,
+                            }}
+                          />
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        {feedback.questionType ? (
+                          <Chip 
+                            label={feedback.questionType}
+                            size="small"
+                            color={
+                              feedback.questionType === 'multiple-choice' ? 'primary' :
+                              feedback.questionType === 'rating' ? 'secondary' :
+                              feedback.questionType === 'text' ? 'info' : 'default'
+                            }
+                            sx={{ 
+                              textTransform: 'capitalize',
+                              fontWeight: 500
+                            }}
+                          />
+                        ) : "-"}
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 200 }}>
+                        {feedback.questionType === 'multiple-choice' && (
+                          <Box>
+                            {feedback.options ? (
+                              Array.isArray(feedback.options) ? (
+                                feedback.options.map((option: string, index: number) => (
+                                  <Tooltip key={index} title={option} placement="top">
+                                    <Typography 
+                                      sx={{ 
+                                        fontSize: '0.875rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 1,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                      }}
+                                    >
+                                      {option}
+                                    </Typography>
+                                  </Tooltip>
+                                ))
+                              ) : (
+                                Object.values(feedback.options as Record<string, string>).map((option: string, index: number) => (
+                                  <Tooltip key={index} title={option} placement="top">
+                                    <Typography 
+                                      sx={{ 
+                                        fontSize: '0.875rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 1,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                      }}
+                                    >
+                                      {option}
+                                    </Typography>
+                                  </Tooltip>
+                                ))
+                              )
+                            ) : null}
+                          </Box>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {feedback.questionType === 'rating' && (
+                          <Box>
+                            <Typography sx={{ fontSize: '0.875rem' }}>
+                              {feedback.ratingScale?.min} - {feedback.ratingScale?.max}
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                              Step: {feedback.ratingScale?.step}
+                            </Typography>
+                          </Box>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={feedback.votes?.length || 0}
+                          size="small"
+                          color="default"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Tooltip title="View Votes">
+                            <Button 
+                              variant="outlined" 
+                              size="small"
+                              onClick={() => openDetailsModal(feedback)}
+                              sx={{ 
+                                minWidth: 'auto',
+                                px: 1,
+                                py: 0.5
+                              }}
+                            >
+                              <Typography sx={{ fontSize: '0.75rem' }}>Votes</Typography>
+                            </Button>
+                          </Tooltip>
+                          {activeTab === 0 && (
+                            <>
+                              <Tooltip title="Update Feedback">
+                                <Button 
+                                  variant="outlined" 
+                                  size="small"
+                                  onClick={() => navigate(`/update-feedback/${feedback.id}`)}
+                                  sx={{ 
+                                    minWidth: 'auto',
+                                    px: 1,
+                                    py: 0.5
+                                  }}
+                                >
+                                  <Typography sx={{ fontSize: '0.75rem' }}>Update</Typography>
+                                </Button>
+                              </Tooltip>
+                              <Tooltip title="Delete Feedback">
+                                <Button 
+                                  variant="outlined" 
+                                  color="error"
+                                  size="small"
+                                  onClick={() => openDeleteModal(feedback.id)}
+                                  sx={{ 
+                                    minWidth: 'auto',
+                                    px: 1,
+                                    py: 0.5
+                                  }}
+                                >
+                                  <Typography sx={{ fontSize: '0.75rem' }}>Delete</Typography>
+                                </Button>
+                              </Tooltip>
+                            </>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
