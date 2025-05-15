@@ -228,12 +228,20 @@ export default function Feedbacks() {
     const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
     const filtered = currentFeedbacks.filter((feedback) => {
       const createdAt = feedback.createdAt?.toDate();
-      if (startDate && createdAt && createdAt < new Date(startDate)) {
-        return false;
+      if (!createdAt) return false;
+
+      if (startDate) {
+        const startDateTime = new Date(startDate);
+        startDateTime.setHours(0, 0, 0, 0);
+        if (createdAt < startDateTime) return false;
       }
-      if (endDate && createdAt && createdAt > new Date(endDate)) {
-        return false;
+      
+      if (endDate) {
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        if (createdAt > endDateTime) return false;
       }
+      
       return true;
     });
     setFilteredFeedbacks(filtered);
