@@ -9,9 +9,9 @@ export const sendEmail = async (to: string, toName: string, content: string) => 
       message: content, // Message with survey link
     };
 
-    const serviceId = 'service_ep5olnc';
-    const templateId = 'template_u4xt6i9';
-    const publicKey = 'MYbU9nM2Z2Ov2Vt9W';
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     await emailjs.send(serviceId, templateId, templateParams, publicKey);
     console.log('Email sent successfully');
