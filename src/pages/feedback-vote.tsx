@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import {
   Box,
@@ -12,8 +11,7 @@ import {
   TextField,
   Rating,
 } from '@mui/material';
-import { db } from '../firebase';
-import type { Feedback } from '../models/firebaseModel';
+import { fetchFeedbackFromDb, submitFeedbackInDb, type Feedback } from '../services/firebase-service';
 import { useAuth } from '../contexts/auth-context';
 
 export default function SurveyVote() {
@@ -31,9 +29,9 @@ export default function SurveyVote() {
   useEffect(() => {
     const fetchSurvey = async () => {
       try {
-        const surveyDoc = await getDoc(doc(db, 'feedbacks', id!));
-        if (surveyDoc.exists()) {
-          const surveyData = surveyDoc.data() as Feedback;
+        const surveyDoc = await fetchFeedbackFromDb(id!);
+        if (surveyDoc) {
+          const surveyData = surveyDoc;
           setSurvey(surveyData);
           
           // Check if user has already submitted
@@ -97,10 +95,7 @@ export default function SurveyVote() {
         ...(survey?.questionType === 'text' && { textResponse }),
       };
 
-      await updateDoc(doc(db, 'feedbacks', id!), {
-        votes: arrayUnion(voteData),
-        submittedBy: arrayUnion(user.uid),
-      });
+      await submitFeedbackInDb(id!, voteData, user);
       
       setHasSubmitted(true);
       toast.success('Thank you for your response!');

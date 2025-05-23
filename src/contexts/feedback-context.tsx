@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { Feedback, fetchFeedbacksFromDb, addFeedbackToDb, updateFeedbackInDb, deleteFeedbackFromDb, fetchFeedbackFromDb } from '../models/firebaseModel';
+import { Feedback, fetchFeedbacksFromDb, addFeedbackToDb, updateFeedbackInDb, deleteFeedbackFromDb, fetchFeedbackFromDb } from '../services/firebase-service';
 import { useAuth } from './auth-context';
 
 interface FeedbackContextType {

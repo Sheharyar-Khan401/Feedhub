@@ -33,7 +33,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { CSVLink } from 'react-csv';
 import { DashboardContent } from '../layouts/dashboard';
-import type { Feedback } from '../models/firebaseModel';
+import type { Feedback } from '../services/firebase-service';
 import { useFeedback } from '../contexts/feedback-context';
 
 const modalStyle = {

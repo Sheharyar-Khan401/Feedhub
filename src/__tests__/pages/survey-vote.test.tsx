@@ -1,7 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { updateDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
-import SurveyVote from '../../pages/survey-vote';
+import SurveyVote from '../../pages/feedback-vote';
 
 // Mock Firebase initialization
 jest.mock('../../firebase', () => ({

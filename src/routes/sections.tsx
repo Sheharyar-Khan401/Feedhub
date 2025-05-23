@@ -12,7 +12,7 @@ import { ProtectedRoute } from 'src/components/auth/protected-route';
 import { useAuth } from 'src/contexts/auth-context';
 import AddFeedback from 'src/pages/add-feedback';
 import UpdateFeedback from 'src/pages/update-feedback';
-import SurveyVote from 'src/pages/survey-vote';
+import SurveyVote from '@/pages/feedback-vote';
 import { AuthForm } from 'src/components/auth/auth-form';
 import { RegisterForm } from 'src/components/auth/register-form';
 import { LoginForm } from 'src/components/auth/login-form';

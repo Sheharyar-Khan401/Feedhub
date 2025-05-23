@@ -7,6 +7,7 @@ import {
   updateDoc,
   addDoc,
   serverTimestamp,
+  arrayUnion,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -116,6 +117,20 @@ export const updateFeedbackInDb = async (id: string, updatedData: any): Promise<
     await updateDoc(feedbackRef, {
       ...updatedData,
       updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating feedback:', error);
+    throw error;
+  }
+};
+
+// Function to Submit Feedback
+export const submitFeedbackInDb = async (id: string, voteData: any, user: any): Promise<void> => {
+  try {
+    const feedbackRef = doc(db, 'feedbacks', id);
+    await updateDoc(feedbackRef, {
+      votes: arrayUnion(voteData),
+      submittedBy: arrayUnion(user.uid),
     });
   } catch (error) {
     console.error('Error updating feedback:', error);
