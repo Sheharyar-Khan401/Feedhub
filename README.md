@@ -18,26 +18,36 @@ Feedhub aims to:
 - **Delete Feedback**: Unnecessary feedback entries can be removed.
 - **Feedback Listing**: Feedback is displayed in a sortable and paginated table.
 - **CSV Export**: Export feedback to a CSV file.
+- **Analytics Dashboard**: View feedback trends and patterns using charts and graphs.
+- **Email Notifications**: Send email notifications for feedback updates using SendGrid.
 - **Firebase Integration**: Firestore is used to store and manage feedback data.
 
 ## Tech Stack
 
 - **Frontend**:
-  - React (with Hooks)
-  - Material UI (for UI components)
+  - React 18 with TypeScript
+  - Material UI v5 (for UI components)
   - React-Quill (for rich text editing)
-- **Backend**:
-  - Firebase Firestore
-  - Firebase Authentication (if enabled in future development)
-- **Other Tools**:
+  - React Router v6 (for routing)
+  - ApexCharts & Recharts (for data visualization)
   - React Toastify (for notifications)
   - React CSV (for CSV export)
+  - EmailJS & SendGrid (for email notifications)
+- **Backend**:
+  - Firebase Firestore
+  - Firebase Authentication
+- **Development Tools**:
+  - Vite (for build tooling)
+  - TypeScript
+  - ESLint & Prettier (for code formatting)
+  - Jest & Playwright (for testing)
+  - Yarn (package manager)
 
 ## Installation
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- npm (v6 or higher)
+- Node.js (v18.x)
+- Yarn (v1.22.22 or higher)
 - Firebase account
 
 ### Step-by-Step Setup
@@ -166,23 +176,26 @@ npm run test:coverage
 ## Development Notes
 
 - **Firebase Integration**:
-
-  - All Firebase operations (CRUD) are handled in the `firebaseModel.ts` file for better separation of concerns.
+  - All Firebase operations (CRUD) are handled in the `firebase.ts` file
+  - Authentication is implemented using Firebase Auth
+  - Firestore rules are configured in `firestore.rules`
 
 - **Environment Variables**:
-
-  - Ensure to configure Firebase credentials in the `.env.local` file for local development.
+  - Ensure to configure Firebase credentials in the `.env` file for local development
+  - Add SendGrid API key for email functionality
 
 - **Styling**:
-  - Material UI is used for consistent and responsive UI.
-  - Additional custom styles are defined in the `theme` folder.
+  - Material UI is used for consistent and responsive UI
+  - Custom theme configuration in the `theme` directory
+  - DM Sans and Barlow fonts are used for typography
 
 ## Future Improvements
 
-- Add user authentication using Firebase Authentication.
-- Implement role-based access control.
-- Add unit and integration tests.
-- Enhance analytics and reporting for feedback data.
+- Implement role-based access control
+- Add more analytics features
+- Enhance email notification system
+- Add feedback categories and tags
+- Implement feedback search functionality
 
 ## License
 
