@@ -21,7 +21,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [votedFeedbacks, setVotedFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   const refreshFeedbacks = useCallback(async () => {
     if (!user) return;
@@ -29,7 +29,10 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       setLoading(true);
       setError(null);
-      const { createdFeedbacks: created, votedFeedbacks: voted } = await fetchFeedbacksFromDb(user.uid);
+      const { createdFeedbacks: created, votedFeedbacks: voted } = await fetchFeedbacksFromDb(
+        user.uid,
+        userRole === 'admin'
+      );
       setCreatedFeedbacks(created);
       setVotedFeedbacks(voted);
     } catch (err) {
@@ -37,7 +40,7 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, userRole]);
 
   useEffect(() => {
     refreshFeedbacks();
@@ -58,9 +61,9 @@ export const FeedbackProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const deleteFeedback = useCallback(async (id: string) => {
     if (!user) throw new Error('User must be logged in to delete feedback');
-    await deleteFeedbackFromDb(id, user.uid);
+    await deleteFeedbackFromDb(id, user.uid, userRole === 'admin');
     await refreshFeedbacks();
-  }, [user, refreshFeedbacks]);
+  }, [user, refreshFeedbacks, userRole]);
 
   const getFeedback = useCallback((id: string) => fetchFeedbackFromDb(id), []);
 

@@ -35,6 +35,7 @@ import { CSVLink } from 'react-csv';
 import { DashboardContent } from '../layouts/dashboard';
 import type { Feedback } from '../services/firebase-service';
 import { useFeedback } from '../contexts/feedback-context';
+import { useAuth } from '../contexts/auth-context';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -196,6 +197,7 @@ const FeedbackVisualization = ({ feedback }: { feedback: Feedback }) => {
 
 export default function Feedbacks() {
   const { createdFeedbacks, votedFeedbacks, error: contextError, deleteFeedback, refreshFeedbacks } = useFeedback();
+  const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -213,6 +215,19 @@ export default function Feedbacks() {
 
   // Update filtered feedbacks when active tab or search term changes
   useEffect(() => {
+    // For admin users, always show all feedbacks
+    if (userRole === 'admin') {
+      const filtered = createdFeedbacks.filter(
+        (feedback) =>
+          feedback.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          feedback.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          feedback.question.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredFeedbacks(filtered);
+      return;
+    }
+
+    // For regular users, show either created or voted feedbacks
     const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
     const filtered = currentFeedbacks.filter(
       (feedback) =>
@@ -221,10 +236,35 @@ export default function Feedbacks() {
         feedback.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredFeedbacks(filtered);
-  }, [searchTerm, createdFeedbacks, votedFeedbacks, activeTab]);
+  }, [searchTerm, createdFeedbacks, votedFeedbacks, activeTab, userRole]);
 
   // Update filtered feedbacks when date range changes
   useEffect(() => {
+    // For admin users, always show all feedbacks
+    if (userRole === 'admin') {
+      const filtered = createdFeedbacks.filter((feedback) => {
+        const createdAt = feedback.createdAt?.toDate();
+        if (!createdAt) return false;
+
+        if (startDate) {
+          const startDateTime = new Date(startDate);
+          startDateTime.setHours(0, 0, 0, 0);
+          if (createdAt < startDateTime) return false;
+        }
+        
+        if (endDate) {
+          const endDateTime = new Date(endDate);
+          endDateTime.setHours(23, 59, 59, 999);
+          if (createdAt > endDateTime) return false;
+        }
+        
+        return true;
+      });
+      setFilteredFeedbacks(filtered);
+      return;
+    }
+
+    // For regular users, show either created or voted feedbacks
     const currentFeedbacks = activeTab === 0 ? createdFeedbacks : votedFeedbacks;
     const filtered = currentFeedbacks.filter((feedback) => {
       const createdAt = feedback.createdAt?.toDate();
@@ -245,7 +285,7 @@ export default function Feedbacks() {
       return true;
     });
     setFilteredFeedbacks(filtered);
-  }, [startDate, endDate, createdFeedbacks, votedFeedbacks, activeTab]);
+  }, [startDate, endDate, createdFeedbacks, votedFeedbacks, activeTab, userRole]);
 
   // Handle errors from context
   useEffect(() => {
@@ -255,6 +295,11 @@ export default function Feedbacks() {
   }, [contextError]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    // For admin users, always keep tab at 0 since there's only one tab
+    if (userRole === 'admin') {
+      setActiveTab(0);
+      return;
+    }
     setActiveTab(newValue);
     refreshFeedbacks();
     setPage(0);
@@ -358,7 +403,7 @@ export default function Feedbacks() {
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Feedbacks
+        Feedbacks {userRole === 'admin' && '(Admin View)'}
       </Typography>
 
       <Box sx={{ mb: 3 }}>
@@ -421,8 +466,8 @@ export default function Feedbacks() {
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange} aria-label="feedback tabs">
-          <Tab label="Created Feedbacks" />
-          <Tab label="Voted Feedbacks" />
+          <Tab label={userRole === 'admin' ? "All Feedbacks" : "Created Feedbacks"} />
+          {userRole !== 'admin' && <Tab label="Voted Feedbacks" />}
         </Tabs>
       </Box>
 
@@ -672,7 +717,7 @@ export default function Feedbacks() {
                               <Typography sx={{ fontSize: '0.75rem' }}>Votes</Typography>
                             </Button>
                           </Tooltip>
-                          {activeTab === 0 && (
+                          {(activeTab === 0 || userRole === 'admin') && (
                             <>
                               <Tooltip title="Update Feedback">
                                 <Button 

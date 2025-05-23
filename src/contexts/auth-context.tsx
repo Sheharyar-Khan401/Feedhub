@@ -7,21 +7,31 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   logout: () => Promise<void>;
+  userRole: string | null;
 };
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   logout: async () => {},
+  userRole: null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       setUser(authUser);
+
+      if(authUser){
+        const userDoc = await getDoc(doc(db, 'users', authUser.uid));
+        if (userDoc.exists()) {
+          setUserRole(userDoc.data().role ?? 'user');
+        }
+      }
       
       if (authUser && !authUser.displayName) {
         try {
@@ -51,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const value = useMemo(() => ({ user, loading, logout }), [user, loading]);
+  const value = useMemo(() => ({ user, loading, logout, userRole }), [user, loading, userRole]);
 
   return (
     <AuthContext.Provider value={value}>

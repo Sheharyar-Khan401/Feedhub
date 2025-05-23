@@ -38,13 +38,23 @@ export interface Feedback {
 }
 
 // Function to retrieve feedbacks
-export const fetchFeedbacksFromDb = async (userId: string): Promise<{ createdFeedbacks: Feedback[]; votedFeedbacks: Feedback[] }> => {
+export const fetchFeedbacksFromDb = async (userId: string, isAdmin: boolean = false): Promise<{ createdFeedbacks: Feedback[]; votedFeedbacks: Feedback[] }> => {
   try {
     const querySnapshot = await getDocs(collection(db, 'feedbacks'));
     const allFeedbacks = querySnapshot.docs.map((feedbackDoc) => ({
       id: feedbackDoc.id,
       ...feedbackDoc.data(),
     })) as Feedback[];
+
+    // If user is admin, return all feedbacks in createdFeedbacks
+    if (isAdmin) {
+      return {
+        createdFeedbacks: allFeedbacks,
+        votedFeedbacks: allFeedbacks.filter((feedback) => 
+          feedback.votes.some((vote) => vote.userId === userId)
+        )
+      };
+    }
 
     const createdFeedbacks = allFeedbacks.filter((feedback) => feedback.createdBy === userId);
     const votedFeedbacks = allFeedbacks.filter((feedback) => 
@@ -59,7 +69,7 @@ export const fetchFeedbacksFromDb = async (userId: string): Promise<{ createdFee
 };
 
 // Function to delete feedback
-export const deleteFeedbackFromDb = async (feedbackId: string, userId: string): Promise<void> => {
+export const deleteFeedbackFromDb = async (feedbackId: string, userId: string, isAdmin: boolean = false): Promise<void> => {
   try {
     const feedbackRef = doc(db, 'feedbacks', feedbackId);
     const feedbackDoc = await getDoc(feedbackRef);
@@ -69,7 +79,7 @@ export const deleteFeedbackFromDb = async (feedbackId: string, userId: string): 
     }
 
     const feedback = feedbackDoc.data() as Feedback;
-    if (feedback.createdBy !== userId) {
+    if (feedback.createdBy !== userId && !isAdmin) {
       throw new Error('You can only delete your own feedbacks');
     }
 
