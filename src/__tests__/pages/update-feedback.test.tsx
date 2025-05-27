@@ -12,7 +12,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // Mock Firebase
-jest.mock('../../models/firebaseModel', () => ({
+jest.mock('../../services/firebase-service', () => ({
   fetchFeedbackFromDb: jest.fn(() => Promise.resolve({
     name: 'Test User',
     email: 'test@example.com',

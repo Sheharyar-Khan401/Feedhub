@@ -12,7 +12,8 @@ jest.mock('../../services/emailService', () => ({
   sendEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../../models/firebaseModel', () => ({
+// Mock Firebase service
+jest.mock('../../services/firebase-service', () => ({
   addFeedbackToDb: jest.fn().mockResolvedValue('mock-feedback-id'),
   fetchFeedbacksFromDb: jest.fn().mockResolvedValue({ createdFeedbacks: [], votedFeedbacks: [] }),
   updateFeedbackInDb: jest.fn().mockResolvedValue(undefined),
@@ -145,8 +146,8 @@ describe('Add Feedback Page', () => {
     fireEvent.change(option1Input, { target: { value: 'Option 1' } });
     fireEvent.change(option2Input, { target: { value: 'Option 2' } });
 
-    // Move to final step
-    fireEvent.click(screen.getByText('Finish'));
+    // Move to final step (click Next again)
+    fireEvent.click(screen.getByText('Next'));
 
     // Wait for the success message and submit button
     await waitFor(() => {
